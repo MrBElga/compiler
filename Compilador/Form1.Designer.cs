@@ -32,41 +32,46 @@
             this.richTextBox1 = new System.Windows.Forms.RichTextBox();
             this.lineNumbersForRichText1 = new LineNumbersControlForRichTextBox.LineNumbersForRichText();
             this.toolStrip1 = new System.Windows.Forms.ToolStrip();
-            this.novoToolStripButton = new System.Windows.Forms.ToolStripButton();
-            this.abrirToolStripButton = new System.Windows.Forms.ToolStripButton();
-            this.salvarToolStripButton = new System.Windows.Forms.ToolStripButton();
             this.toolStripSeparator = new System.Windows.Forms.ToolStripSeparator();
-            this.btnSublinhar = new System.Windows.Forms.ToolStripButton();
-            this.btnNegrito = new System.Windows.Forms.ToolStripButton();
-            this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
-            this.btnCompilar = new System.Windows.Forms.ToolStripButton();
-            this.btnLimparTudo = new System.Windows.Forms.ToolStripButton();
             this.openFileDialog1 = new System.Windows.Forms.OpenFileDialog();
             this.saveFileDialog1 = new System.Windows.Forms.SaveFileDialog();
             this.richTextBoxErro = new System.Windows.Forms.RichTextBox();
             this.lbNomeProjeto = new System.Windows.Forms.Label();
             this.label1 = new System.Windows.Forms.Label();
+            this.novoToolStripButton = new System.Windows.Forms.ToolStripButton();
+            this.abrirToolStripButton = new System.Windows.Forms.ToolStripButton();
+            this.salvarToolStripButton = new System.Windows.Forms.ToolStripButton();
+            this.btnCompilar = new System.Windows.Forms.ToolStripButton();
+            this.btnLimparTudo = new System.Windows.Forms.ToolStripButton();
             this.toolStrip1.SuspendLayout();
             this.SuspendLayout();
             // 
             // richTextBox1
             // 
-            this.richTextBox1.Location = new System.Drawing.Point(23, 28);
+            this.richTextBox1.BackColor = System.Drawing.Color.Gainsboro;
+            this.richTextBox1.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.richTextBox1.Font = new System.Drawing.Font("Consolas", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.richTextBox1.ForeColor = System.Drawing.SystemColors.MenuText;
+            this.richTextBox1.Location = new System.Drawing.Point(28, 28);
             this.richTextBox1.Name = "richTextBox1";
-            this.richTextBox1.Size = new System.Drawing.Size(946, 440);
+            this.richTextBox1.Size = new System.Drawing.Size(392, 440);
             this.richTextBox1.TabIndex = 0;
             this.richTextBox1.Text = "";
             // 
             // lineNumbersForRichText1
             // 
-            this.lineNumbersForRichText1.AutoSizing = true;
-            this.lineNumbersForRichText1.BackgroundGradientAlphaColor = System.Drawing.Color.Transparent;
-            this.lineNumbersForRichText1.BackgroundGradientBetaColor = System.Drawing.Color.LightSteelBlue;
+            this.lineNumbersForRichText1.AutoSizing = false;
+            this.lineNumbersForRichText1.BackColor = System.Drawing.Color.White;
+            this.lineNumbersForRichText1.BackgroundGradientAlphaColor = System.Drawing.Color.White;
+            this.lineNumbersForRichText1.BackgroundGradientBetaColor = System.Drawing.SystemColors.Window;
             this.lineNumbersForRichText1.BackgroundGradientDirection = System.Drawing.Drawing2D.LinearGradientMode.Horizontal;
-            this.lineNumbersForRichText1.BorderLinesColor = System.Drawing.Color.SlateGray;
+            this.lineNumbersForRichText1.BackgroundImageLayout = System.Windows.Forms.ImageLayout.None;
+            this.lineNumbersForRichText1.BorderLinesColor = System.Drawing.Color.Transparent;
             this.lineNumbersForRichText1.BorderLinesStyle = System.Drawing.Drawing2D.DashStyle.Dot;
             this.lineNumbersForRichText1.BorderLinesThickness = 1F;
             this.lineNumbersForRichText1.DockSide = LineNumbersControlForRichTextBox.LineNumbersForRichText.LineNumberDockSide.Left;
+            this.lineNumbersForRichText1.Font = new System.Drawing.Font("Consolas", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lineNumbersForRichText1.ForeColor = System.Drawing.SystemColors.InfoText;
             this.lineNumbersForRichText1.GridLinesColor = System.Drawing.Color.SlateGray;
             this.lineNumbersForRichText1.GridLinesStyle = System.Drawing.Drawing2D.DashStyle.Dot;
             this.lineNumbersForRichText1.GridLinesThickness = 1F;
@@ -76,9 +81,9 @@
             this.lineNumbersForRichText1.LineNumbersClippedByItemRectangle = true;
             this.lineNumbersForRichText1.LineNumbersLeadingZeroes = true;
             this.lineNumbersForRichText1.LineNumbersOffset = new System.Drawing.Size(0, 0);
-            this.lineNumbersForRichText1.Location = new System.Drawing.Point(2, 28);
+            this.lineNumbersForRichText1.Location = new System.Drawing.Point(7, 28);
             this.lineNumbersForRichText1.Margin = new System.Windows.Forms.Padding(0);
-            this.lineNumbersForRichText1.MarginLinesColor = System.Drawing.Color.SlateGray;
+            this.lineNumbersForRichText1.MarginLinesColor = System.Drawing.Color.Transparent;
             this.lineNumbersForRichText1.MarginLinesSide = LineNumbersControlForRichTextBox.LineNumbersForRichText.LineNumberDockSide.Right;
             this.lineNumbersForRichText1.MarginLinesStyle = System.Drawing.Drawing2D.DashStyle.Solid;
             this.lineNumbersForRichText1.MarginLinesThickness = 1F;
@@ -96,21 +101,72 @@
             // 
             // toolStrip1
             // 
+            this.toolStrip1.BackColor = System.Drawing.Color.DarkGray;
+            this.toolStrip1.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Center;
+            this.toolStrip1.Dock = System.Windows.Forms.DockStyle.Right;
+            this.toolStrip1.GripStyle = System.Windows.Forms.ToolStripGripStyle.Hidden;
             this.toolStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.novoToolStripButton,
             this.abrirToolStripButton,
             this.salvarToolStripButton,
             this.toolStripSeparator,
-            this.btnSublinhar,
-            this.btnNegrito,
-            this.toolStripSeparator1,
             this.btnCompilar,
             this.btnLimparTudo});
-            this.toolStrip1.Location = new System.Drawing.Point(0, 0);
+            this.toolStrip1.LayoutStyle = System.Windows.Forms.ToolStripLayoutStyle.VerticalStackWithOverflow;
+            this.toolStrip1.Location = new System.Drawing.Point(853, 0);
             this.toolStrip1.Name = "toolStrip1";
-            this.toolStrip1.Size = new System.Drawing.Size(981, 25);
+            this.toolStrip1.RenderMode = System.Windows.Forms.ToolStripRenderMode.Professional;
+            this.toolStrip1.Size = new System.Drawing.Size(24, 478);
             this.toolStrip1.TabIndex = 2;
             this.toolStrip1.Text = "toolStrip1";
+            // 
+            // toolStripSeparator
+            // 
+            this.toolStripSeparator.BackColor = System.Drawing.Color.Transparent;
+            this.toolStripSeparator.ForeColor = System.Drawing.SystemColors.ButtonFace;
+            this.toolStripSeparator.Name = "toolStripSeparator";
+            this.toolStripSeparator.Size = new System.Drawing.Size(29, 6);
+            // 
+            // openFileDialog1
+            // 
+            this.openFileDialog1.FileName = "openFileDialog1";
+            // 
+            // richTextBoxErro
+            // 
+            this.richTextBoxErro.BackColor = System.Drawing.Color.WhiteSmoke;
+            this.richTextBoxErro.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.richTextBoxErro.Cursor = System.Windows.Forms.Cursors.Default;
+            this.richTextBoxErro.Enabled = false;
+            this.richTextBoxErro.Font = new System.Drawing.Font("Consolas", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.richTextBoxErro.ForeColor = System.Drawing.SystemColors.WindowText;
+            this.richTextBoxErro.Location = new System.Drawing.Point(439, 48);
+            this.richTextBoxErro.Name = "richTextBoxErro";
+            this.richTextBoxErro.ReadOnly = true;
+            this.richTextBoxErro.Size = new System.Drawing.Size(398, 93);
+            this.richTextBoxErro.TabIndex = 3;
+            this.richTextBoxErro.Text = "";
+            // 
+            // lbNomeProjeto
+            // 
+            this.lbNomeProjeto.AutoSize = true;
+            this.lbNomeProjeto.Font = new System.Drawing.Font("Consolas", 14.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lbNomeProjeto.ForeColor = System.Drawing.SystemColors.InactiveBorder;
+            this.lbNomeProjeto.Location = new System.Drawing.Point(24, 3);
+            this.lbNomeProjeto.Name = "lbNomeProjeto";
+            this.lbNomeProjeto.Size = new System.Drawing.Size(160, 22);
+            this.lbNomeProjeto.TabIndex = 4;
+            this.lbNomeProjeto.Text = "Nome do Projeto";
+            // 
+            // label1
+            // 
+            this.label1.AutoSize = true;
+            this.label1.Font = new System.Drawing.Font("Consolas", 14.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label1.ForeColor = System.Drawing.SystemColors.HighlightText;
+            this.label1.Location = new System.Drawing.Point(435, 23);
+            this.label1.Name = "label1";
+            this.label1.Size = new System.Drawing.Size(70, 22);
+            this.label1.TabIndex = 5;
+            this.label1.Text = "Saida:";
             // 
             // novoToolStripButton
             // 
@@ -118,7 +174,7 @@
             this.novoToolStripButton.Image = ((System.Drawing.Image)(resources.GetObject("novoToolStripButton.Image")));
             this.novoToolStripButton.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.novoToolStripButton.Name = "novoToolStripButton";
-            this.novoToolStripButton.Size = new System.Drawing.Size(23, 22);
+            this.novoToolStripButton.Size = new System.Drawing.Size(21, 20);
             this.novoToolStripButton.Text = "&Novo";
             this.novoToolStripButton.Click += new System.EventHandler(this.novoToolStripButton_Click);
             // 
@@ -142,40 +198,10 @@
             this.salvarToolStripButton.Text = "&Salvar";
             this.salvarToolStripButton.Click += new System.EventHandler(this.salvarToolStripButton_Click);
             // 
-            // toolStripSeparator
-            // 
-            this.toolStripSeparator.Name = "toolStripSeparator";
-            this.toolStripSeparator.Size = new System.Drawing.Size(6, 25);
-            // 
-            // btnSublinhar
-            // 
-            this.btnSublinhar.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.btnSublinhar.Image = global::Compilador.Properties.Resources.sublinhado;
-            this.btnSublinhar.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.btnSublinhar.Name = "btnSublinhar";
-            this.btnSublinhar.Size = new System.Drawing.Size(23, 22);
-            this.btnSublinhar.Text = "Sublinhar";
-            this.btnSublinhar.Click += new System.EventHandler(this.btnSublinhar_Click);
-            // 
-            // btnNegrito
-            // 
-            this.btnNegrito.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.btnNegrito.Image = global::Compilador.Properties.Resources.audacioso;
-            this.btnNegrito.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.btnNegrito.Name = "btnNegrito";
-            this.btnNegrito.Size = new System.Drawing.Size(23, 22);
-            this.btnNegrito.Text = "Negrito";
-            this.btnNegrito.Click += new System.EventHandler(this.btnNegrito_Click);
-            // 
-            // toolStripSeparator1
-            // 
-            this.toolStripSeparator1.Name = "toolStripSeparator1";
-            this.toolStripSeparator1.Size = new System.Drawing.Size(6, 25);
-            // 
             // btnCompilar
             // 
             this.btnCompilar.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.btnCompilar.Image = global::Compilador.Properties.Resources.play_alt;
+            this.btnCompilar.Image = global::Compilador.Properties.Resources.compilador;
             this.btnCompilar.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.btnCompilar.Name = "btnCompilar";
             this.btnCompilar.Size = new System.Drawing.Size(23, 22);
@@ -185,53 +211,20 @@
             // btnLimparTudo
             // 
             this.btnLimparTudo.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.btnLimparTudo.Image = global::Compilador.Properties.Resources.limpar;
+            this.btnLimparTudo.Image = global::Compilador.Properties.Resources.limpar1;
             this.btnLimparTudo.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.btnLimparTudo.Name = "btnLimparTudo";
-            this.btnLimparTudo.Size = new System.Drawing.Size(23, 22);
+            this.btnLimparTudo.Size = new System.Drawing.Size(21, 20);
             this.btnLimparTudo.Text = "Limpar Tudo";
             this.btnLimparTudo.Click += new System.EventHandler(this.btnLimparTudo_Click);
-            // 
-            // openFileDialog1
-            // 
-            this.openFileDialog1.FileName = "openFileDialog1";
-            // 
-            // richTextBoxErro
-            // 
-            this.richTextBoxErro.Location = new System.Drawing.Point(23, 492);
-            this.richTextBoxErro.Name = "richTextBoxErro";
-            this.richTextBoxErro.ReadOnly = true;
-            this.richTextBoxErro.Size = new System.Drawing.Size(946, 93);
-            this.richTextBoxErro.TabIndex = 3;
-            this.richTextBoxErro.Text = "";
-            // 
-            // lbNomeProjeto
-            // 
-            this.lbNomeProjeto.AutoSize = true;
-            this.lbNomeProjeto.Font = new System.Drawing.Font("Modern No. 20", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lbNomeProjeto.ForeColor = System.Drawing.SystemColors.Highlight;
-            this.lbNomeProjeto.Location = new System.Drawing.Point(409, 9);
-            this.lbNomeProjeto.Name = "lbNomeProjeto";
-            this.lbNomeProjeto.Size = new System.Drawing.Size(130, 18);
-            this.lbNomeProjeto.TabIndex = 4;
-            this.lbNomeProjeto.Text = "Nome do Projeto";
-            // 
-            // label1
-            // 
-            this.label1.AutoSize = true;
-            this.label1.Font = new System.Drawing.Font("Modern No. 20", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label1.ForeColor = System.Drawing.SystemColors.Highlight;
-            this.label1.Location = new System.Drawing.Point(20, 471);
-            this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(53, 18);
-            this.label1.TabIndex = 5;
-            this.label1.Text = "Saida:";
             // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(981, 597);
+            this.BackColor = System.Drawing.Color.Gray;
+            this.BackgroundImageLayout = System.Windows.Forms.ImageLayout.None;
+            this.ClientSize = new System.Drawing.Size(877, 478);
             this.Controls.Add(this.label1);
             this.Controls.Add(this.lbNomeProjeto);
             this.Controls.Add(this.richTextBoxErro);
@@ -240,7 +233,7 @@
             this.Controls.Add(this.richTextBox1);
             this.ForeColor = System.Drawing.SystemColors.ControlText;
             this.Name = "Form1";
-            this.Text = "Editor de Texto";
+            this.Text = "Compilador LIB";
             this.toolStrip1.ResumeLayout(false);
             this.toolStrip1.PerformLayout();
             this.ResumeLayout(false);
@@ -258,9 +251,6 @@
         private System.Windows.Forms.ToolStripButton salvarToolStripButton;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator;
         private System.Windows.Forms.ToolStripButton btnCompilar;
-        private System.Windows.Forms.ToolStripButton btnNegrito;
-        private System.Windows.Forms.ToolStripButton btnSublinhar;
-        private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
         private System.Windows.Forms.ToolStripButton btnLimparTudo;
         private System.Windows.Forms.OpenFileDialog openFileDialog1;
         private System.Windows.Forms.SaveFileDialog saveFileDialog1;
