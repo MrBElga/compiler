@@ -1,207 +1,162 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Text.RegularExpressions;
+using System.Collections.Generic;
 
 namespace Compilador.Analises
 {
     internal class Analise_Lexica
     {
         private FileStream arquivo;
-        string[,] tbReservada;
-        public Analise_Lexica(FileStream arq) { 
+        private string[,] tbReservada;
+
+        public Analise_Lexica(FileStream arq)
+        {
             this.arquivo = arq;
+            criarTabelaReservada();
         }
+
         private void criarTabelaReservada()
         {
             tbReservada = new string[,] {
-                {"Program","t_program"},
-                {"While","t_while"}, 
-                { "If", "t_if" },
-                { "Else", "t_else" }, 
-                { "{", "t_inibloco" },
-                { "}", "t_fimbloco" },
-                { "(", "t_abreparen" },
-                { ")", "t_fechaparen" },
-                { "=", "t_atribuicao" },
-                { "Integer", "t_integer" },
-                { "Float", "t_float" },
-                { "Char", "t_char" },
-                { "String", "t_string" },
-                { ".", "t_ponto" },
-                { ",", "t_virgula" },
-
+                {"Program", "t_programa"},
+                {"Integer", "t_integer"},
+                {"Float", "t_float"},
+                {"Char", "t_char"},
+                {"String", "t_string"},
+                {"If", "t_if"},
+                {"Else", "t_else"},
+                {"While", "t_while"},
+                {"{", "t_abreBloco"},
+                {"}", "t_fechaBloco"},
+                {"(", "t_abreParen"},
+                {")", "t_fechaParen"},
+                {"=", "t_atribuicao"},
+                {",", "t_pontuacao"},
+                {".", "t_pontuacao"},
+                {"true", "t_bool"},
+                {"false", "t_bool"}
             };
         }
 
-        public string AnalisadorLexico()
+        public List<(string TokenDescription, int LineNumber)> AnalisadorLexico()
         {
-            string[] palavras;
-            int i = 0,j=0;
-            string relatorio = "";
-            string retorno = null;
+            List<(string TokenDescription, int LineNumber)> relatorio = new List<(string, int)>();
+            int contLinha = 1;
 
-            StreamReader streamReader = new StreamReader(arquivo); //Criação do leitor
+            StreamReader streamReader = new StreamReader(arquivo);
             streamReader.BaseStream.Seek(0, SeekOrigin.Begin);
 
-            string linha = streamReader.ReadLine(); //Ler uma linha e armazenar na variável
-            int contLinha = 1;
-            
-
-            while (linha != null)
+            string linha;
+            while ((linha = streamReader.ReadLine()) != null)
             {
-                palavras = linha.Split(' ');
-                i = 0;
-                while (i< palavras.Length )
+                string[] tokens = linha.Split(new[] { ' ', '\t' }, StringSplitOptions.RemoveEmptyEntries);
+                foreach (string token in tokens)
                 {
-                    if (palavras[i] != "") { 
-                        if ((palavras[i].ElementAt(0) > 64 && palavras[i].ElementAt(0) <= 90) ||
-                            palavras[i].Equals("{") || palavras[i].Equals("}") || 
-                            palavras[i].Equals("(") || palavras[i].Equals(")") ||
-                            palavras[i].Equals("=") || palavras[i].Equals(".") || palavras[i].Equals(","))
+                    if (!string.IsNullOrEmpty(token))
+                    {
+                        bool isReserved = false;
+                        for (int j = 0; j < tbReservada.GetLength(0); j++)
                         {
-                            //Chamar tabelas de palavras reservadas
-                            criarTabelaReservada();
-                            j = 0;
-                            while (j< tbReservada.Length/2 && palavras[i] != tbReservada[j, 0])
-                                j++;
-                            if (j < tbReservada.Length / 2 && palavras[i] == tbReservada[j, 0])
+                            if (tbReservada[j, 0] == token)
                             {
-                                relatorio += tbReservada[j,0] +" eh "+ tbReservada[j,1] + "\n";
+                                relatorio.Add(($"{token} eh {tbReservada[j, 1]}", contLinha));
+                                isReserved = true;
+                                break;
+                            }
+                        }
+
+                        if (!isReserved)
+                        {
+                            string retorno = AnalyzeToken(token);
+                            if (retorno.Contains("ERRO"))
+                            {
+                                relatorio.Add((retorno.Replace("\n", " "), contLinha));
                             }
                             else
                             {
-                                relatorio += "ERRO :'" + palavras[i] + "' não percente a Gramatica => linha :"+contLinha+" \n";
+                                relatorio.Add((retorno, contLinha));
                             }
                         }
-                        else
-                        {
-                            // Aplicando os first
-                            retorno = firstID(palavras[i]);
-                            if (retorno == null)
-                            {
-                                retorno = firstOpRelacao(palavras[i]);
-                                if (retorno == null)
-                                {
-                                    retorno = firstNum(palavras[i]);
-                                    if (retorno == null)
-                                    {
-                                        retorno = firstSomaMenos(palavras[i]);
-                                        if (retorno == null)
-                                        {
-                                            retorno = firstMultDiv(palavras[i]);
-                                            if (retorno == null)
-                                            {
-                                                retorno = firstOpComparacao(palavras[i]);
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-
-                            if (retorno.Contains("ERRO"))
-                            {
-                                retorno = retorno.Replace('\n',' ');
-                                retorno = retorno+" => linha :" + contLinha + "\n";
-                            }
-                            relatorio += retorno;
-                        }
-                     }
-
-                    i++;
+                    }
                 }
-                linha = streamReader.ReadLine(); //Leitura da nova linha
                 contLinha++;
             }
             streamReader.Close();
             return relatorio;
         }
 
-        private string firstID(string palavra)
+        private string AnalyzeToken(string token)
         {
-            if (palavra.ElementAt(0) > 96 && palavra.ElementAt(0)<=122)
+            string retorno = null;
+
+            retorno = firstID(token);
+            if (retorno == null) retorno = firstNum(token);
+            if (retorno == null) retorno = firstOpRelacao(token);
+            if (retorno == null) retorno = firstOpLogico(token);
+            if (retorno == null) retorno = firstOpAddSub(token);
+            if (retorno == null) retorno = firstOpMulDiv(token);
+            if (retorno == null) retorno = "ERRO : '" + token + "' não pertence à Gramática\n";
+
+            return retorno;
+        }
+
+        private string firstID(string token)
+        {
+            if (char.IsLetter(token[0]) && char.IsLower(token[0]))
             {
                 Automato automato = new Automato();
-                return automato.AutomatoID(palavra);
+                return automato.AutomatoID(token);
             }
-            else
-            {
-                return null;
-            }
-            
+            return null;
         }
 
-        private string firstOpRelacao(string palavra)
+        private string firstNum(string token)
         {
-            if (palavra.ElementAt(0).Equals('=') || palavra.ElementAt(0).Equals('>') || palavra.ElementAt(0).Equals('<') || palavra.ElementAt(0).Equals('!'))
+            if (char.IsDigit(token[0]))
             {
                 Automato automato = new Automato();
-                return automato.AutomatoOPRelacao(palavra);
+                return automato.automatoNum(token);
             }
-            else
-            {
-                return null;
-            }
-
+            return null;
         }
 
-        private string firstNum(string palavra)
+        private string firstOpRelacao(string token)
         {
-            if (palavra.ElementAt(0) > 47 && palavra.ElementAt(0) <= 57)
+            if (token[0] == '=' || token[0] == '!' || token[0] == '<' || token[0] == '>')
             {
                 Automato automato = new Automato();
-                return automato.automatoNum(palavra);
+                return automato.AutomatoOPRelacao(token);
             }
-            else
-            {
-                return null;
-            }
-
+            return null;
         }
 
-        private string firstSomaMenos(string palavra)
+        private string firstOpLogico(string token)
         {
-            if (palavra.ElementAt(0) == 43 || palavra.ElementAt(0) == 45)
-            {
-                return palavra + " eh t_opsomamenos \n";
-            }
-            else
-            {
-                return null;
-            }
-
-        }
-
-        private string firstMultDiv(string palavra)
-        {
-            if (palavra.ElementAt(0) == 42 || palavra.ElementAt(0) == 92)
-            {
-                return palavra + " eh t_opmultdiv \n";
-            }
-            else
-            {
-                return null;
-            }
-
-        }
-
-        private string firstOpComparacao(string palavra)
-        {
-            if (palavra.ElementAt(0).Equals('&') || palavra.ElementAt(0).Equals('|') || palavra.ElementAt(0).Equals('!'))
+            if (token[0] == '&' || token[0] == '|' || token[0] == '!')
             {
                 Automato automato = new Automato();
-                return automato.AutomatoOPComparacao(palavra);
+                return automato.AutomatoOPComparacao(token);
             }
-            else
-            {
-                return null;
-            }
-
+            return null;
         }
 
+        private string firstOpAddSub(string token)
+        {
+            if (token == "+" || token == "-")
+            {
+                return token + " eh t_opaddsub\n";
+            }
+            return null;
+        }
 
-
+        private string firstOpMulDiv(string token)
+        {
+            if (token == "*" || token == "/")
+            {
+                return token + " eh t_opmuldiv\n";
+            }
+            return null;
+        }
     }
 }

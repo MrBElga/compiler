@@ -1,238 +1,102 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System;
+using System.IO;
+using System.Text.RegularExpressions;
+
 
 namespace Compilador.Analises
 {
     internal class Automato
     {
-
         public Automato() { }
-
 
         public string AutomatoID(string palavra)
         {
-            for (int i = 0; i < palavra.Length; i++)
+            if (!char.IsLetter(palavra[0]) || !char.IsLower(palavra[0]))
+                return "ERRO : '" + palavra + "' não pertence à Gramática\n";
+
+            for (int i = 1; i < palavra.Length; i++)
             {
-                if ((palavra.ElementAt(0) > 96 && palavra.ElementAt(0) <= 122) || (palavra.ElementAt(0) > 47 && palavra.ElementAt(0) <= 57))
-                {
-                    i++;
-                }
-                else
-                {
-                    return "ERRO :'" + palavra + "' não percente a Gramatica \n";
-                }
+                if (!char.IsLetterOrDigit(palavra[i]))
+                    return "ERRO : '" + palavra + "' não pertence à Gramática\n";
             }
-            return palavra + " eh t_id \n";
+            return palavra + " eh t_id\n";
         }
 
         public string AutomatoOPRelacao(string palavra)
         {
-            int i = 0;
+            if (palavra.Length < 1) return "ERRO : '" + palavra + "' não pertence à Gramática\n";
 
-            if (palavra[i].Equals('='))
+            switch (palavra[0])
             {
-                i++;
-                if (i < palavra.Length)
-                {
-                    if (palavra[i].Equals('='))
-                    {
-                        return palavra + " eh t_igual \n";
-                    }
-                    else
-                    {
-                        return "ERRO : '" + palavra + "' não percente a Gramatica \n";
-                    }
-
-                }
-                else
-                {
-                    return palavra + " eh t_maior\n";
-                }
+                case '=':
+                    if (palavra.Length == 1) return palavra + " eh t_atribuicao\n";
+                    if (palavra.Length == 2 && palavra[1] == '=') return palavra + " eh t_igual\n";
+                    break;
+                case '<':
+                    if (palavra.Length == 1) return palavra + " eh t_menor\n";
+                    if (palavra.Length == 2 && palavra[1] == '=') return palavra + " eh t_menorigual\n";
+                    break;
+                case '>':
+                    if (palavra.Length == 1) return palavra + " eh t_maior\n";
+                    if (palavra.Length == 2 && palavra[1] == '=') return palavra + " eh t_maiorigual\n";
+                    break;
+                case '!':
+                    if (palavra.Length == 2 && palavra[1] == '=') return palavra + " eh t_dif\n";
+                    break;
             }
-
-            if (palavra[i].Equals('<'))
-            {
-                i++;
-                if (i < palavra.Length)
-                {
-                    if (palavra[i].Equals('='))
-                    {
-                        return palavra + " eh t_menorigual \n";
-                    }
-                    else
-                    {
-                        return "ERRO : '" + palavra + "' não percente a Gramatica \n";
-                    }
-
-                }
-                else
-                {
-                    return palavra + " eh t_menor\n";
-                }
-
-
-            }
-
-            if (palavra[i].Equals('>'))
-            {
-                i++;
-                if (i < palavra.Length)
-                {
-                    if (palavra[i].Equals('='))
-                    {
-                        return palavra + " eh t_maiorigual \n";
-                    }
-                    else
-                    {
-                        return "ERRO : '" + palavra + "' não percente a Gramatica \n";
-                    }
-
-                }
-                else
-                {
-                    return palavra + " eh t_maior\n";
-                }
-            }
-            if (palavra[i].Equals('!'))
-            {
-                i++;
-                if (i < palavra.Length)
-                {
-                    if (palavra[i].Equals('='))
-                    {
-                        return palavra + " eh t_dif \n";
-                    }
-                    else
-                    {
-                        return "ERRO : '" + palavra + "' não percente a Gramatica \n";
-                    }
-
-                }
-                else
-                {
-                    return null;
-                }
-            }
-
-            return "ERRO : '" + palavra + "' não percente a Gramatica \n";
+            return "ERRO : '" + palavra + "' não pertence à Gramática\n";
         }
 
         public string automatoNum(string palavra)
         {
-            if (palavra.ElementAt(0) > 47 && palavra.ElementAt(0) <= 57)
+            if (!char.IsDigit(palavra[0])) return "ERRO : '" + palavra + "' não pertence à Gramática\n";
+
+            int i = 0;
+            bool hasDot = false;
+            bool hasE = false;
+
+            while (i < palavra.Length)
             {
-                int i = 1;
-                while (i < palavra.Length && !palavra.ElementAt(i).Equals('.') && !palavra.ElementAt(i).Equals('E'))
+                if (palavra[i] == '.' && !hasDot && i + 1 < palavra.Length && char.IsDigit(palavra[i + 1]))
                 {
-                    if (palavra.ElementAt(i) <= 47 || palavra.ElementAt(i) > 57)
-                        return "ERRO : '" + palavra + "' não percente a Gramatica \n";
+                    hasDot = true;
                     i++;
+                    continue;
                 }
-
-                if (i < palavra.Length)
+                if (palavra[i] == 'E' && !hasE && i + 1 < palavra.Length)
                 {
-                    while (i < palavra.Length && !palavra.ElementAt(i).Equals('E'))
-                    {
-                        if (palavra.ElementAt(i) <= 47 || palavra.ElementAt(i) > 57)
-                            return "ERRO : '" + palavra + "' não percente a Gramatica \n";
+                    hasE = true;
+                    i++;
+                    if (i < palavra.Length && (palavra[i] == '+' || palavra[i] == '-'))
                         i++;
-                    }
-                    if (i < palavra.Length && palavra.ElementAt(i).Equals('E'))
-                    {
-                        i++;
-                        if (palavra.ElementAt(i).Equals('+') || palavra.ElementAt(i).Equals('-') || palavra.ElementAt(i) > 47 && palavra.ElementAt(i) <= 57)
-                        {
-                            while (i < palavra.Length)
-                            {
-                                if (palavra.ElementAt(i) <= 47 || palavra.ElementAt(i) > 57)
-                                    return "ERRO : '" + palavra + "' não percente a Gramatica \n";
-                                i++;
-                            }
-                            if (i == palavra.Length)
-                            {
-                                return palavra + " eh t_num \n";
-
-                            }
-                            else
-                            {
-                                return "ERRO : '" + palavra + "' não percente a Gramatica \n";
-                            }
-                        }
-                        else
-                        {
-                            return "ERRO : '" + palavra + "' não percente a Gramatica \n";
-                        }
-
-                    }
-                    else
-                    {
-                        return palavra + " eh t_num \n";
-                    }
+                    if (i >= palavra.Length || !char.IsDigit(palavra[i]))
+                        return "ERRO : '" + palavra + "' não pertence à Gramática\n";
                 }
-                else
-                {
-                    return palavra + " eh t_num \n";
-                }
-
-
-
-
+                if (!char.IsDigit(palavra[i]))
+                    return "ERRO : '" + palavra + "' não pertence à Gramática\n";
+                i++;
             }
-
-            return "ERRO : '" + palavra + "' não percente a Gramatica \n";
+            return palavra + " eh t_num\n";
         }
+
         public string AutomatoOPComparacao(string palavra)
         {
-            int i = 0;
+            if (palavra.Length < 1) return "ERRO : '" + palavra + "' não pertence à Gramática\n";
 
-            if (palavra[i].Equals('&'))
+            switch (palavra[0])
             {
-                i++;
-                if (i < palavra.Length)
-                {
-                    if (palavra[i].Equals('&'))
-                    {
-                        return palavra + " eh t_and \n";
-                    }
-                    else
-                    {
-                        return "ERRO : '" + palavra + "' não percente a Gramatica \n";
-                    }
-
-                }
-                else
-                {
-                    return "ERRO : '" + palavra + "' não percente a Gramatica \n";
-                }
+                case '&':
+                    if (palavra.Length == 2 && palavra[1] == '&') return palavra + " eh t_and\n";
+                    break;
+                case '|':
+                    if (palavra.Length == 2 && palavra[1] == '|') return palavra + " eh t_or\n";
+                    break;
+                case '!':
+                    if (palavra.Length == 1) return palavra + " eh t_not\n";
+                    break;
             }
-            else if (palavra[i].Equals('|'))
-            {
-                i++;
-                if (i < palavra.Length)
-                {
-                    if (palavra[i].Equals('|'))
-                    {
-                        return palavra + " eh t_or \n";
-                    }
-                    else
-                    {
-                        return "ERRO : '" + palavra + "' não percente a Gramatica \n";
-                    }
-
-                }
-                else
-                {
-                    return "ERRO : '" + palavra + "' não percente a Gramatica \n";
-                }
-            }
-            else if (palavra[i].Equals('!'))
-            {
-                return palavra + " eh t_not \n";
-            }
-            return "ERRO : '" + palavra + "' não percente a Gramatica \n";
+            return "ERRO : '" + palavra + "' não pertence à Gramática\n";
         }
     }
 }

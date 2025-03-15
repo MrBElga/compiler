@@ -24,10 +24,10 @@ C:\Users\danie\OneDrive\Desktop\compiler\Compilador\bin\Debug\Compilador.exe.con
 C:\Users\danie\OneDrive\Desktop\compiler\Compilador\bin\Debug\Compilador.exe
 C:\Users\danie\OneDrive\Desktop\compiler\Compilador\bin\Debug\Compilador.pdb
 C:\Users\danie\OneDrive\Desktop\compiler\Compilador\obj\Debug\Compilador.csproj.AssemblyReference.cache
-C:\Users\danie\OneDrive\Desktop\compiler\Compilador\obj\Debug\Compilador.Form1.resources
 C:\Users\danie\OneDrive\Desktop\compiler\Compilador\obj\Debug\Compilador.Properties.Resources.resources
 C:\Users\danie\OneDrive\Desktop\compiler\Compilador\obj\Debug\Compilador.csproj.GenerateResource.cache
 C:\Users\danie\OneDrive\Desktop\compiler\Compilador\obj\Debug\Compilador.csproj.CoreCompileInputs.cache
 C:\Users\danie\OneDrive\Desktop\compiler\Compilador\obj\Debug\Compilador.csproj.Up2Date
 C:\Users\danie\OneDrive\Desktop\compiler\Compilador\obj\Debug\Compilador.exe
 C:\Users\danie\OneDrive\Desktop\compiler\Compilador\obj\Debug\Compilador.pdb
+C:\Users\danie\OneDrive\Desktop\compiler\Compilador\obj\Debug\Compilador.Form1.resources
