@@ -25,7 +25,7 @@ namespace Compilador
                 Filter = "Arquivos de texto (*.txt)|*.txt",
                 DefaultExt = "txt"
             };
-            richTextBoxErro.ForeColor = Color.Black;
+            richTextBoxErro.ForeColor = Color.White;
             richTextBoxErro.ReadOnly = true;
             richTextBoxErro.DoubleClick += RichTextBoxErro_DoubleClick;
             this.OnResize(EventArgs.Empty);
@@ -177,7 +177,7 @@ namespace Compilador
 
                             richTextBoxErro.SelectionColor = Color.Red;
                             richTextBoxErro.AppendText($"  Linha {errorLine + 1}: ");
-                            richTextBoxErro.SelectionColor = Color.Black;
+                            richTextBoxErro.SelectionColor = Color.White;
                             richTextBoxErro.AppendText($"{errorMessage}\n");
                             richTextBoxErro.SelectionFont = new Font(richTextBoxErro.Font, FontStyle.Italic);
                             richTextBoxErro.AppendText($"    Trecho: \"{lineContent}\"\n");
@@ -190,7 +190,7 @@ namespace Compilador
                             }
                         }
 
-                        richTextBoxErro.SelectionColor = Color.Black;
+                        richTextBoxErro.SelectionColor = Color.Cyan;
                         richTextBoxErro.AppendText($"* Relatório de Análise Léxica Gerado em: {reportPath}\n");
                     }
                     else
@@ -199,7 +199,7 @@ namespace Compilador
                         richTextBoxErro.SelectionFont = new Font(richTextBoxErro.Font, FontStyle.Bold);
                         richTextBoxErro.AppendText("✓ Compilado com Sucesso!!!\n");
                         richTextBoxErro.SelectionFont = richTextBoxErro.Font;
-                        richTextBoxErro.SelectionColor = Color.Black;
+                        richTextBoxErro.SelectionColor = Color.Cyan;
                         richTextBoxErro.AppendText($"* Relatório de Análise Léxica Gerado em: {reportPath}\n");
 
                         // Exibe os tokens reconhecidos
