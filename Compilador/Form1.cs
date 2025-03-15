@@ -28,6 +28,7 @@ namespace Compilador
             richTextBoxErro.ForeColor = Color.Black;
             richTextBoxErro.ReadOnly = true;
             richTextBoxErro.DoubleClick += RichTextBoxErro_DoubleClick;
+            this.OnResize(EventArgs.Empty);
         }
 
         #region Arquivo Operations

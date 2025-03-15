@@ -86,23 +86,13 @@
   <ItemGroup>
     <None Include="App.config" />
   </ItemGroup>
+  <ItemGroup />
   <ItemGroup>
-    <None Include="Resources\play-alt.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\audacioso.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\sublinhado.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\limpar.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\compilador.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\limpar1.png" />
+    <Content Include="Resources\disk_save.png" />
+    <Content Include="Resources\file_new.png" />
+    <Content Include="Resources\open_folder.png" />
+    <Content Include="Resources\play.png" />
+    <Content Include="Resources\trash.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
