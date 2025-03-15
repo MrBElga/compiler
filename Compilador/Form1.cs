@@ -1,302 +1,294 @@
-﻿using Compilador.Analises;
-using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Forms;
+﻿    using Compilador.Analises;
+    using System;
+    using System.Drawing;
+    using System.IO;
+    using System.Linq;
+    using System.Text.RegularExpressions;
+    using System.Windows.Forms;
 
-namespace Compilador
-{
-    public partial class Form1 : Form
+    namespace Compilador
     {
-        public Form1()
+        public partial class Form1 : Form
         {
-            InitializeComponent();
-            openFileDialog1 = new OpenFileDialog();
-            saveFileDialog1 = new SaveFileDialog();
-        }
+            private string currentFilePath = string.Empty;
 
-        private void novoToolStripButton_Click(object sender, EventArgs e)
-        {
-            //Limpar Texto dentro da Caixa de Diálogo
-            richTextBox1.Clear();
-            openFileDialog1 = new OpenFileDialog();
-            saveFileDialog1 = new SaveFileDialog();
-            lbNomeProjeto.Text = "Nome do Projeto";
-            //Posicionar o cursor
-            richTextBox1.Focus();
-        }
+            public Form1()
+            {
+                InitializeComponent();
+                openFileDialog1 = new OpenFileDialog
+                {
+                    Title = "Abrir arquivo",
+                    Filter = "Arquivos de texto (*.txt)|*.txt|Todos os arquivos (*.*)|*.*"
+                };
+                saveFileDialog1 = new SaveFileDialog
+                {
+                    Filter = "Arquivos de texto (*.txt)|*.txt",
+                    DefaultExt = "txt"
+                };
+                richTextBoxErro.ForeColor = Color.Black;
+                richTextBoxErro.ReadOnly = true; // Impede edição manual
+                richTextBoxErro.DoubleClick += RichTextBoxErro_DoubleClick; // Evento de clique
+            }
 
-        private void abrirToolStripButton_Click(object sender, EventArgs e)
-        {
-            this.openFileDialog1.Title = "Abrir arquivo"; //Título da janela
-            openFileDialog1.InitialDirectory = ""; //Diretório inicial - Desktop
-            openFileDialog1.FileName = ""; //Limpa o nome da busca pelo arquivo
-            openFileDialog1.Filter = "Arquivo de texto (*.txt)|*.txt|Todos os arquivos(*.*)|*.*"; //Opção de filtro que irá abrir
+            #region Arquivo Operations
+            private void novoToolStripButton_Click(object sender, EventArgs e)
+            {
+                ClearEditor();
+            }
 
-            DialogResult dr = this.openFileDialog1.ShowDialog();
-            if (dr == System.Windows.Forms.DialogResult.OK)
+            private void abrirToolStripButton_Click(object sender, EventArgs e)
+            {
+                if (openFileDialog1.ShowDialog() == DialogResult.OK)
+                {
+                    OpenFile(openFileDialog1.FileName);
+                }
+            }
+
+            private void salvarToolStripButton_Click(object sender, EventArgs e)
+            {
+                SaveFile();
+            }
+
+            private void ClearEditor()
+            {
+                richTextBox1.Clear();
+                richTextBoxErro.Clear();
+                currentFilePath = string.Empty;
+                lbNomeProjeto.Text = "Novo Projeto";
+                richTextBox1.Focus();
+            }
+
+            private void OpenFile(string filePath)
             {
                 try
                 {
-                    lbNomeProjeto.Text = openFileDialog1.FileName;
-                    FileStream arquivo = new FileStream(openFileDialog1.FileName, FileMode.Open, FileAccess.Read);
-                    StreamReader streamReader = new StreamReader(arquivo); //Criação do leitor
-                    streamReader.BaseStream.Seek(0, SeekOrigin.Begin);
-                    this.richTextBox1.Text = "";
-
-                    string linha = streamReader.ReadLine(); //Ler uma linha e armazenar na variável
-
-                    //Enquanto houver linha ele vai ler e armazenar na variavel linha
-                    while (linha != null)
-                    {
-                        this.richTextBox1.Text += linha + "\n";
-                        linha = streamReader.ReadLine(); //Leitura da nova linha
-                    }
-                    streamReader.Close();
+                    richTextBox1.Text = File.ReadAllText(filePath);
+                    currentFilePath = filePath;
+                    lbNomeProjeto.Text = Path.GetFileName(filePath);
+                    richTextBoxErro.Clear();
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show("Erro de leitura: " + ex.Message, "Erro ao ler arquivo", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    ShowError("Erro ao abrir arquivo", ex.Message);
                 }
             }
-        }
 
-        private void Salvar()
-        {
-            try
+            private void SaveFile()
             {
-                if (saveFileDialog1.FileName == "" && openFileDialog1.FileName == "" )
+                try
                 {
-                    if (this.saveFileDialog1.ShowDialog() == DialogResult.OK)
+                    if (string.IsNullOrEmpty(currentFilePath))
                     {
-                        //Criação do Arquivo
-                        lbNomeProjeto.Text = saveFileDialog1.FileName;
-                        FileStream arquivo = new FileStream(saveFileDialog1.FileName + ".txt", FileMode.OpenOrCreate, FileAccess.Write);
-                        StreamWriter streamReader = new StreamWriter(arquivo); //Criação do escritor
-                        streamReader.Flush(); //Responsável por fazer a transição com o buffer
-                        streamReader.BaseStream.Seek(0, SeekOrigin.Begin); //A partir de onde começará a escrever
-                        streamReader.Write(this.richTextBox1.Text); //Conteúdo que será gravado
-                        streamReader.Flush();
-                        streamReader.Close(); //Fechar o escritor
+                        if (saveFileDialog1.ShowDialog() == DialogResult.OK)
+                        {
+                            currentFilePath = saveFileDialog1.FileName;
+                        }
+                        else
+                        {
+                            return;
+                        }
+                    }
+
+                    File.WriteAllText(currentFilePath, richTextBox1.Text);
+                    lbNomeProjeto.Text = Path.GetFileName(currentFilePath);
+                }
+                catch (Exception ex)
+                {
+                    ShowError("Erro ao salvar arquivo", ex.Message);
+                }
+            }
+            #endregion
+
+            #region Text Formatting
+            private void ToggleFontStyle(FontStyle style)
+            {
+                var currentFont = richTextBox1.SelectionFont ?? richTextBox1.Font;
+                var newStyle = currentFont.Style ^ style;
+                richTextBox1.SelectionFont = new Font(currentFont.FontFamily, currentFont.Size, newStyle);
+            }
+
+            private void btnNegrito_Click(object sender, EventArgs e)
+            {
+                ToggleFontStyle(FontStyle.Bold);
+            }
+
+            private void btnSublinhar_Click(object sender, EventArgs e)
+            {
+                ToggleFontStyle(FontStyle.Underline);
+            }
+
+            private void btnLimparTudo_Click(object sender, EventArgs e)
+            {
+                ClearEditor();
+            }
+            #endregion
+
+            #region Compiler
+            private void btnCompilar_Click(object sender, EventArgs e)
+            {
+                // Salva o arquivo se já estiver associado a um caminho
+                if (!string.IsNullOrEmpty(currentFilePath))
+                {
+                    SaveFile();
+                }
+                // Se não houver caminho (novo arquivo), solicita salvar
+                else if (string.IsNullOrEmpty(currentFilePath))
+                {
+                    SaveFile();
+                    if (string.IsNullOrEmpty(currentFilePath)) return; // Sai se o usuário cancelar a salvar
+                }
+
+                try
+                {
+                    richTextBoxErro.Clear();
+                    ResetEditorHighlight();
+
+                    using (var fileStream = new FileStream(currentFilePath, FileMode.Open, FileAccess.Read))
+                    {
+                        var analiseLexica = new Analise_Lexica(fileStream);
+                        string relatorioLexico = analiseLexica.AnalisadorLexico();
+
+                        string reportPath = Path.Combine(
+                            Path.GetDirectoryName(currentFilePath),
+                            $"{Path.GetFileNameWithoutExtension(currentFilePath)}_relatorioAnaliseLexica.txt");
+
+                        File.WriteAllText(reportPath, relatorioLexico);
+
+                        var lines = relatorioLexico.Split('\n');
+                        var errors = lines
+                            .Select((line, index) => new { Line = line, Index = index })
+                            .Where(item => item.Line.Contains("ERRO"))
+                            .ToList();
+
+                        if (errors.Any())
+                        {
+                            richTextBoxErro.SelectionColor = Color.Red;
+                            richTextBoxErro.SelectionFont = new Font(richTextBoxErro.Font, FontStyle.Bold);
+                            richTextBoxErro.AppendText("❌ ERRO ao Compilar!!!\n");
+                            richTextBoxErro.SelectionFont = richTextBoxErro.Font;
+
+                            foreach (var error in errors)
+                            {
+                                int errorLine = ExtractLineNumber(error.Line) - 1;
+                                string errorMessage = RemoveLineReference(error.Line);
+                                string lineContent = errorLine >= 0 && errorLine < richTextBox1.Lines.Length
+                                    ? richTextBox1.Lines[errorLine].Trim()
+                                    : "Não disponível";
+
+                                richTextBoxErro.SelectionColor = Color.Red;
+                                richTextBoxErro.AppendText($"  Linha {errorLine + 1}: ");
+                                richTextBoxErro.SelectionColor = Color.Black;
+                                richTextBoxErro.AppendText($"{errorMessage}\n");
+                                richTextBoxErro.SelectionFont = new Font(richTextBoxErro.Font, FontStyle.Italic);
+                                richTextBoxErro.AppendText($"    Trecho: \"{lineContent}\"\n");
+                                richTextBoxErro.SelectionFont = richTextBoxErro.Font;
+                                richTextBoxErro.AppendText("  -------------------\n");
+
+                                if (errorLine >= 0 && errorLine < richTextBox1.Lines.Length)
+                                {
+                                    HighlightErrorLine(errorLine);
+                                }
+                            }
+
+                            richTextBoxErro.SelectionColor = Color.Black;
+                            richTextBoxErro.AppendText($"* Relatório de Análise Léxica Gerado em: {reportPath}");
+                        }
+                        else
+                        {
+                            richTextBoxErro.SelectionColor = Color.Green;
+                            richTextBoxErro.SelectionFont = new Font(richTextBoxErro.Font, FontStyle.Bold);
+                            richTextBoxErro.AppendText("✓ Compilado com Sucesso!!!\n");
+                            richTextBoxErro.SelectionFont = richTextBoxErro.Font;
+                            richTextBoxErro.SelectionColor = Color.Black;
+                            richTextBoxErro.AppendText($"* Relatório de Análise Léxica Gerado em: {reportPath}");
+                        }
                     }
                 }
-                else
+                catch (Exception ex)
                 {
-                    string nome;
-                    if (saveFileDialog1.FileName != "")
+                    ShowError("Erro ao compilar", ex.Message);
+                }
+            }
+
+            private string RemoveLineReference(string errorMessage)
+            {
+                return Regex.Replace(errorMessage, @"--> linha : \d+", "").Trim();
+            }
+
+            private int ExtractLineNumber(string errorLine)
+            {
+                var match = Regex.Match(errorLine, @"linha\D*(\d+)", RegexOptions.IgnoreCase);
+                return match.Success && int.TryParse(match.Groups[1].Value, out int line) ? line : -1;
+            }
+
+            private void HighlightErrorLine(int lineNumber)
+            {
+                int start = richTextBox1.GetFirstCharIndexFromLine(lineNumber);
+                int length = richTextBox1.Lines[lineNumber].Length;
+
+                richTextBox1.Select(start, length);
+                richTextBox1.SelectionBackColor = Color.LightPink;
+
+                string errorToken = ExtractErrorToken(richTextBox1.Lines[lineNumber]);
+                if (!string.IsNullOrEmpty(errorToken))
+                {
+                    int tokenStart = richTextBox1.Lines[lineNumber].IndexOf(errorToken);
+                    if (tokenStart >= 0)
                     {
-                         nome = saveFileDialog1.FileName +".txt";
+                        richTextBox1.Select(start + tokenStart, errorToken.Length);
+                        richTextBox1.SelectionFont = new Font(richTextBox1.Font, FontStyle.Underline);
+                        richTextBox1.SelectionColor = Color.Red;
                     }
-                    else
-                    {
-                        nome = openFileDialog1.FileName;
-                    }
-                    //Criação do Arquivo
-                    lbNomeProjeto.Text = nome;
-                    FileStream arquivo = new FileStream(nome, FileMode.Create, FileAccess.Write);
-                    StreamWriter streamReader = new StreamWriter(arquivo); //Criação do escritor
-                    streamReader.Flush(); //Responsável por fazer a transição com o buffer
-                    streamReader.BaseStream.Seek(0, SeekOrigin.Begin); //A partir de onde começará a escrever
-                    streamReader.Write(this.richTextBox1.Text); //Conteúdo que será gravado
-                    streamReader.Flush();
-                    streamReader.Close(); //Fechar o escritor
                 }
-            }
-            catch (Exception ex) //Caso aconteça algum erro
-            {
-                MessageBox.Show("Erro na gravação: " + ex.Message, "Erro ao gravar", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
-        }
 
-        private void salvarToolStripButton_Click(object sender, EventArgs e)
-        {
-            Salvar();
-        }
-
-        private void btnNegrito_Click(object sender, EventArgs e)
-        {
-            string nome_da_fonte = null;
-            float tamanho_da_fonte = 0;
-            bool negrito, italico, sublinhado = false;
-
-            nome_da_fonte = richTextBox1.Font.Name;
-            tamanho_da_fonte = richTextBox1.Font.Size;
-            negrito = richTextBox1.SelectionFont.Bold;
-            italico = richTextBox1.SelectionFont.Italic;
-            sublinhado = richTextBox1.SelectionFont.Underline;
-
-            richTextBox1.SelectionFont = new Font(nome_da_fonte, tamanho_da_fonte, FontStyle.Regular); //Colocar o texto de forma comum (sem negrito)
-
-            //Verificação se o campo selecionado está em negrito
-            if (negrito == false)
-            {
-                if (italico == true & sublinhado == true)
-                {
-                    richTextBox1.SelectionFont = new Font(nome_da_fonte, tamanho_da_fonte, FontStyle.Bold | FontStyle.Italic | FontStyle.Underline); //Colocar o texto em negrito, itálico e sublinhado
-                }
-                else if (italico == false & sublinhado == true)
-                {
-                    richTextBox1.SelectionFont = new Font(nome_da_fonte, tamanho_da_fonte, FontStyle.Bold | FontStyle.Underline); //Colocar o texto em negrito e sublinhado
-                }
-                else if (italico == true & sublinhado == false)
-                {
-                    richTextBox1.SelectionFont = new Font(nome_da_fonte, tamanho_da_fonte, FontStyle.Bold | FontStyle.Italic); //Colocar o texto em negrito e itálico
-                }
-                else if (italico == false & sublinhado == false)
-                {
-                    richTextBox1.SelectionFont = new Font(nome_da_fonte, tamanho_da_fonte, FontStyle.Bold); //Colocar o texto em negrito
-                }
-            }
-            else
-            {
-                if (italico == true & sublinhado == true)
-                {
-                    richTextBox1.SelectionFont = new Font(nome_da_fonte, tamanho_da_fonte, FontStyle.Italic | FontStyle.Underline); //Colocar o texto itálico e sublinhado
-                }
-                else if (italico == false & sublinhado == true)
-                {
-                    richTextBox1.SelectionFont = new Font(nome_da_fonte, tamanho_da_fonte, FontStyle.Underline); //Colocar o texto em sublinhado
-                }
-                else if (italico == true & sublinhado == false)
-                {
-                    richTextBox1.SelectionFont = new Font(nome_da_fonte, tamanho_da_fonte, FontStyle.Italic); //Colocar o texto em itálico
-                }
-            }
-        }
-
-        private void btnSublinhar_Click(object sender, EventArgs e)
-        {
-            string nome_da_fonte = null;
-            float tamanho_da_fonte = 0;
-            bool negrito, italico, sublinhado = false;
-
-            nome_da_fonte = richTextBox1.Font.Name;
-            tamanho_da_fonte = richTextBox1.Font.Size;
-            negrito = richTextBox1.SelectionFont.Bold;
-            italico = richTextBox1.SelectionFont.Italic;
-            sublinhado = richTextBox1.SelectionFont.Underline;
-
-            richTextBox1.SelectionFont = new Font(nome_da_fonte, tamanho_da_fonte, FontStyle.Regular); //Colocar o texto de forma comum
-
-            //Verificação se o campo selecionado está sublinhado
-            if (sublinhado == false)
-            {
-                if (negrito == true & italico == true)
-                {
-                    richTextBox1.SelectionFont = new Font(nome_da_fonte, tamanho_da_fonte, FontStyle.Bold | FontStyle.Italic | FontStyle.Underline); //Colocar o texto em negrito, itálico e sublinhado
-                }
-                else if (negrito == false & italico == true)
-                {
-                    richTextBox1.SelectionFont = new Font(nome_da_fonte, tamanho_da_fonte, FontStyle.Italic | FontStyle.Underline); //Colocar o texto em itálico e sublinhado
-                }
-                else if (negrito == true & italico == false)
-                {
-                    richTextBox1.SelectionFont = new Font(nome_da_fonte, tamanho_da_fonte, FontStyle.Bold | FontStyle.Underline); //Colocar o texto em negrito e sublinhado
-                }
-                else if (negrito == false & italico == false)
-                {
-                    richTextBox1.SelectionFont = new Font(nome_da_fonte, tamanho_da_fonte, FontStyle.Underline); //Colocar o texto sublinhado
-                }
-            }
-            else
-            {
-                if (negrito == true & italico == true)
-                {
-                    richTextBox1.SelectionFont = new Font(nome_da_fonte, tamanho_da_fonte, FontStyle.Bold | FontStyle.Italic); //Colocar o texto negrito e italico
-                }
-                else if (negrito == false & italico == true)
-                {
-                    richTextBox1.SelectionFont = new Font(nome_da_fonte, tamanho_da_fonte, FontStyle.Italic); //Colocar o texto em itálico
-                }
-                else if (negrito == true & italico == false)
-                {
-                    richTextBox1.SelectionFont = new Font(nome_da_fonte, tamanho_da_fonte, FontStyle.Bold); //Colocar o texto em negrito
-                }
-            }
-        }
-
-        private void btnLimparTudo_Click(object sender, EventArgs e)
-        {
-            //Limpar Texto dentro da Caixa de Diálogo
-            richTextBox1.Clear();
-            //Posicionar o cursor
-            richTextBox1.Focus();
-        }
-
-        private void btnCompilar_Click(object sender, EventArgs e)
-        {
-            this.richTextBoxErro.Text = "";
-            Salvar();
-            string nome;
-            if (saveFileDialog1.FileName != "")
-            {
-                nome = saveFileDialog1.FileName + ".txt";
-            }
-            else
-            {
-                nome = openFileDialog1.FileName;
+                richTextBox1.DeselectAll();
             }
 
-           // FileStream arquivo = new FileStream(nome, FileMode.Open, FileAccess.Read);
-            /* StreamReader streamReader = new StreamReader(arquivo); //Criação do leitor
-             streamReader.BaseStream.Seek(0, SeekOrigin.Begin);
-             this.richTextBoxErro.Text = "";
-             this.richTextBoxErro.Text = "Nome Arquivo : "+ nome;
-
-             string linha = streamReader.ReadLine(); //Ler uma linha e armazenar na variável
-
-             //Enquanto houver linha ele vai ler e armazenar na variavel linha
-             while (linha != null)
-             {
-                 //linha.
-                 richTextBoxErro.Text += linha + "\n";
-                 linha = streamReader.ReadLine(); //Leitura da nova linha
-             }
-             streamReader.Close();*/
-            // richTextBoxErro.Text = "ERRO : adicona o erro  => LINHA : 12 \n";
-
-            FileStream arquivo = new FileStream(nome, FileMode.Open, FileAccess.Read);
-            Analise_Lexica analise_Lexica = new Analise_Lexica(arquivo);
-            string relatorioLexico = analise_Lexica.AnalisadorLexico();
-
-            //Criação do Arquivo
-            nome = nome.Replace(".txt", "");
-            FileStream arquivoRelatorio = new FileStream(nome+"_relatorioAnaliseLexica.txt", FileMode.Create, FileAccess.Write);
-            StreamWriter streamReader = new StreamWriter(arquivoRelatorio); //Criação do escritor
-            streamReader.Flush(); //Responsável por fazer a transição com o buffer
-            streamReader.BaseStream.Seek(0, SeekOrigin.Begin); //A partir de onde começará a escrever
-            streamReader.Write(relatorioLexico); //Conteúdo que será gravado
-            streamReader.Flush();
-            streamReader.Close(); //Fechar o escritor
-
-           
-            string[] erroRelatorio = relatorioLexico.Split('\n');
-            string erroLinha = "";
-            for (int i = 0; i < erroRelatorio.Length; i++)
+            private string ExtractErrorToken(string line)
             {
-                if (erroRelatorio[i].Contains("ERRO"))
+                var match = Regex.Match(line, @"'([^']*)'");
+                return match.Success ? match.Groups[1].Value : null;
+            }
+
+            private void ResetEditorHighlight()
+            {
+                richTextBox1.SelectAll();
+                richTextBox1.SelectionBackColor = richTextBox1.BackColor;
+                richTextBox1.SelectionFont = richTextBox1.Font;
+                richTextBox1.SelectionColor = richTextBox1.ForeColor;
+                richTextBox1.DeselectAll();
+            }
+
+            private void RichTextBoxErro_DoubleClick(object sender, EventArgs e)
+            {
+                int charIndex = richTextBoxErro.SelectionStart;
+                int lineIndex = richTextBoxErro.GetLineFromCharIndex(charIndex);
+
+                string lineText = richTextBoxErro.Lines[lineIndex];
+                var match = Regex.Match(lineText, @"Linha (\d+):");
+                if (match.Success && int.TryParse(match.Groups[1].Value, out int lineNumber))
                 {
-                    erroLinha += "  @"+erroRelatorio[i] + "\n";
+                    GoToEditorLine(lineNumber - 1);
                 }
-               
-             }
-
-            if (erroLinha == "")
-            {
-                richTextBoxErro.Text = "Compilado com Sucesso!!!\n " + erroLinha + "* Relátorio de Análise Lexica Gerado !!";
             }
-            else
-            {
-                richTextBoxErro.Text = "ERRO ao Compilar!!!\n" + erroLinha + "\n* Relátorio de Análise Lexica Gerado !!";
-            }
-           
 
+            private void GoToEditorLine(int lineNumber)
+            {
+                if (lineNumber >= 0 && lineNumber < richTextBox1.Lines.Length)
+                {
+                    int start = richTextBox1.GetFirstCharIndexFromLine(lineNumber);
+                    richTextBox1.Select(start, 0);
+                    richTextBox1.ScrollToCaret();
+                    richTextBox1.Focus();
+                }
+            }
+            #endregion
+
+            #region Helpers
+            private void ShowError(string title, string message)
+            {
+                MessageBox.Show($"Erro: {message}", title, MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            #endregion
         }
     }
-}
