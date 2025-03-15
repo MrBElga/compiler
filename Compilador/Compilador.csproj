@@ -98,5 +98,11 @@
   <ItemGroup>
     <None Include="Resources\limpar.png" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\compilador.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\limpar1.png" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
