@@ -208,6 +208,16 @@ namespace Compilador
             this.ResumeLayout(false);
             this.PerformLayout();
 
+            // Evento para ajuste dinâmico no redimensionamento da tela
+            this.Resize += (s, e) =>
+            {
+                int width = this.ClientSize.Width;
+                int height = this.ClientSize.Height;
+
+                this.lineNumbersForRichText1.Size = new Size(40, height - 40);
+                this.richTextBox1.Size = new Size(width - this.lineNumbersForRichText1.Width - 290, height - 40);
+                this.richTextBoxErro.Size = new Size(250, height - 40);
+            };
         }
 
         #endregion
