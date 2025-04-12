@@ -42,3 +42,14 @@ C:\Users\iagho\Source\Repos\compiler\Compilador\obj\Debug\Compilador.csproj.Core
 C:\Users\iagho\Source\Repos\compiler\Compilador\obj\Debug\Compilador.csproj.Up2Date
 C:\Users\iagho\Source\Repos\compiler\Compilador\obj\Debug\Compilador.exe
 C:\Users\iagho\Source\Repos\compiler\Compilador\obj\Debug\Compilador.pdb
+D:\compiler\Compilador\bin\Debug\Compilador.exe.config
+D:\compiler\Compilador\bin\Debug\Compilador.exe
+D:\compiler\Compilador\bin\Debug\Compilador.pdb
+D:\compiler\Compilador\obj\Debug\Compilador.csproj.AssemblyReference.cache
+D:\compiler\Compilador\obj\Debug\Compilador.Form1.resources
+D:\compiler\Compilador\obj\Debug\Compilador.Properties.Resources.resources
+D:\compiler\Compilador\obj\Debug\Compilador.csproj.GenerateResource.cache
+D:\compiler\Compilador\obj\Debug\Compilador.csproj.CoreCompileInputs.cache
+D:\compiler\Compilador\obj\Debug\Compilador.csproj.Up2Date
+D:\compiler\Compilador\obj\Debug\Compilador.exe
+D:\compiler\Compilador\obj\Debug\Compilador.pdb

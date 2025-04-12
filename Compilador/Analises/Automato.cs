@@ -1,8 +1,7 @@
-﻿using System;
+﻿// Automato.cs (Ajustado)
 using System;
 using System.IO;
 using System.Text.RegularExpressions;
-
 
 namespace Compilador.Analises
 {
@@ -12,91 +11,90 @@ namespace Compilador.Analises
 
         public string AutomatoID(string palavra)
         {
+            // Valida ID (começa com minúscula, seguido por letras/dígitos)
             if (!char.IsLetter(palavra[0]) || !char.IsLower(palavra[0]))
-                return "ERRO : '" + palavra + "' não pertence à Gramática\n";
+                return $"ERRO : Identificador inválido '{palavra}' (deve iniciar com letra minúscula)"; // Removido \n
 
             for (int i = 1; i < palavra.Length; i++)
             {
                 if (!char.IsLetterOrDigit(palavra[i]))
-                    return "ERRO : '" + palavra + "' não pertence à Gramática\n";
+                    return $"ERRO : Identificador inválido '{palavra}' (contém caractere não permitido)"; // Removido \n
             }
-            return palavra + " eh t_id\n";
+            return $"{palavra} eh t_id"; // Removido \n
         }
 
         public string AutomatoOPRelacao(string palavra)
         {
-            if (palavra.Length < 1) return "ERRO : '" + palavra + "' não pertence à Gramática\n";
+            if (string.IsNullOrEmpty(palavra)) return $"ERRO : Operador relacional inválido ''"; // Removido \n
 
-            switch (palavra[0])
+            switch (palavra) // Verifica a string inteira
             {
-                case '=':
-                    if (palavra.Length == 1) return palavra + " eh t_atribuicao\n";
-                    if (palavra.Length == 2 && palavra[1] == '=') return palavra + " eh t_igual\n";
-                    break;
-                case '<':
-                    if (palavra.Length == 1) return palavra + " eh t_menor\n";
-                    if (palavra.Length == 2 && palavra[1] == '=') return palavra + " eh t_menorigual\n";
-                    break;
-                case '>':
-                    if (palavra.Length == 1) return palavra + " eh t_maior\n";
-                    if (palavra.Length == 2 && palavra[1] == '=') return palavra + " eh t_maiorigual\n";
-                    break;
-                case '!':
-                    if (palavra.Length == 2 && palavra[1] == '=') return palavra + " eh t_dif\n";
-                    break;
+                case "==": return $"{palavra} eh t_igualdade"; // Removido \n
+                case "!=": return $"{palavra} eh t_diferenca"; // Removido \n
+                case "<": return $"{palavra} eh t_menor";       // Removido \n
+                case ">": return $"{palavra} eh t_maior";       // Removido \n
+                case "<=": return $"{palavra} eh t_menor_igual"; // Removido \n
+                case ">=": return $"{palavra} eh t_maior_igual"; // Removido \n
             }
-            return "ERRO : '" + palavra + "' não pertence à Gramática\n";
+            // Se não for nenhum dos operadores válidos completos
+            return $"ERRO : Operador relacional inválido '{palavra}'"; // Removido \n
         }
 
         public string automatoNum(string palavra)
         {
-            if (!char.IsDigit(palavra[0])) return "ERRO : '" + palavra + "' não pertence à Gramática\n";
-
-            int i = 0;
-            bool hasDot = false;
-            bool hasE = false;
-
-            while (i < palavra.Length)
+            // Usando Regex para simplificar a validação de int/float
+            // Permite inteiros (123) ou floats (123.456)
+            // Não permite '.' inicial ou final, nem múltiplos '.'
+            // Não trata notação científica 'E' aqui, adicione se necessário
+            if (Regex.IsMatch(palavra, @"^\d+$")) // Inteiro
             {
-                if (palavra[i] == '.' && !hasDot && i + 1 < palavra.Length && char.IsDigit(palavra[i + 1]))
-                {
-                    hasDot = true;
-                    i++;
-                    continue;
-                }
-                if (palavra[i] == 'E' && !hasE && i + 1 < palavra.Length)
-                {
-                    hasE = true;
-                    i++;
-                    if (i < palavra.Length && (palavra[i] == '+' || palavra[i] == '-'))
-                        i++;
-                    if (i >= palavra.Length || !char.IsDigit(palavra[i]))
-                        return "ERRO : '" + palavra + "' não pertence à Gramática\n";
-                }
-                if (!char.IsDigit(palavra[i]))
-                    return "ERRO : '" + palavra + "' não pertence à Gramática\n";
-                i++;
+                return $"{palavra} eh t_numero_int"; // Removido \n
             }
-            return palavra + " eh t_num\n";
+            if (Regex.IsMatch(palavra, @"^\d+\.\d+$")) // Float simples
+            {
+                return $"{palavra} eh t_numero_real"; // Removido \n
+            }
+
+            return $"ERRO : Numero inválido '{palavra}'"; // Removido \n
         }
 
-        public string AutomatoOPComparacao(string palavra)
+        public string AutomatoOPComparacao(string palavra) // Renomeado para AutomatoOPLogico?
         {
-            if (palavra.Length < 1) return "ERRO : '" + palavra + "' não pertence à Gramática\n";
+            if (string.IsNullOrEmpty(palavra)) return $"ERRO : Operador lógico inválido ''"; // Removido \n
 
-            switch (palavra[0])
+            switch (palavra) // Verifica a string inteira
             {
-                case '&':
-                    if (palavra.Length == 2 && palavra[1] == '&') return palavra + " eh t_and\n";
-                    break;
-                case '|':
-                    if (palavra.Length == 2 && palavra[1] == '|') return palavra + " eh t_or\n";
-                    break;
-                case '!':
-                    if (palavra.Length == 1) return palavra + " eh t_not\n";
-                    break;
+                case "&&": return $"{palavra} eh t_logico_e"; // Removido \n
+                case "||": return $"{palavra} eh t_logico_ou"; // Removido \n
+                case "!": return $"{palavra} eh t_logico_nao"; // Removido \n (Nota: conflito com != se o lexer não separar bem)
             }
-            return "ERRO : '" + palavra + "' não pertence à Gramática\n";
+            return $"ERRO : Operador lógico inválido '{palavra}'"; // Removido \n
+        }
+
+        // NOVO: Método para operadores de Adição/Subtração
+        public string AutomatoOpAddSub(string palavra)
+        {
+            if (string.IsNullOrEmpty(palavra)) return $"ERRO : Operador inválido ''";
+
+            switch (palavra)
+            {
+                case "+": return $"{palavra} eh t_soma";
+                case "-": return $"{palavra} eh t_subtracao";
+            }
+            return $"ERRO : Operador de adição/subtração inválido '{palavra}'";
+        }
+
+        // NOVO: Método para operadores de Multiplicação/Divisão
+        public string AutomatoOpMulDiv(string palavra)
+        {
+            if (string.IsNullOrEmpty(palavra)) return $"ERRO : Operador inválido ''";
+
+            switch (palavra)
+            {
+                case "*": return $"{palavra} eh t_multiplicacao";
+                case "/": return $"{palavra} eh t_divisao";
+            }
+            return $"ERRO : Operador de multiplicação/divisão inválido '{palavra}'";
         }
     }
 }

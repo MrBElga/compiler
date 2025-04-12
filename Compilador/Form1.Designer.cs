@@ -47,21 +47,58 @@ namespace Compilador
             this.label1 = new System.Windows.Forms.Label();
             this.toolStrip1.SuspendLayout();
             this.SuspendLayout();
+            // 
             // richTextBox1
-            this.richTextBox1.Location = new Point(40, 28);
-            this.richTextBox1.Size = new Size(this.ClientSize.Width - 290, this.ClientSize.Height - 40);
-            this.richTextBox1.Padding = new Padding(5, 0, 0, 0);
-            this.richTextBox1.Font = new Font("Consolas", 12F);
-            this.richTextBox1.BackColor = Color.FromArgb(40, 42, 54);
-            this.richTextBox1.ForeColor = Color.FromArgb(248, 248, 242);
+            // 
+            this.richTextBox1.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(40)))), ((int)(((byte)(42)))), ((int)(((byte)(54)))));
+            this.richTextBox1.Font = new System.Drawing.Font("Consolas", 12F);
+            this.richTextBox1.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(248)))), ((int)(((byte)(248)))), ((int)(((byte)(242)))));
+            this.richTextBox1.Location = new System.Drawing.Point(40, 28);
+            this.richTextBox1.Name = "richTextBox1";
+            this.richTextBox1.Size = new System.Drawing.Size(480, 521);
+            this.richTextBox1.TabIndex = 4;
+            this.richTextBox1.Text = "";
+            // 
             // lineNumbersForRichText1
-            this.lineNumbersForRichText1.Dock = DockStyle.None;
-            this.lineNumbersForRichText1.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left;
-            this.lineNumbersForRichText1.Location = new Point(0, 28);
-            this.lineNumbersForRichText1.Size = new Size(40, this.ClientSize.Height - 40);
-            this.lineNumbersForRichText1.BackColor = Color.FromArgb(40, 42, 54);
-            this.lineNumbersForRichText1.ForeColor = Color.White;
+            // 
+            this.lineNumbersForRichText1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left)));
+            this.lineNumbersForRichText1.AutoSizing = true;
+            this.lineNumbersForRichText1.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(40)))), ((int)(((byte)(42)))), ((int)(((byte)(54)))));
+            this.lineNumbersForRichText1.BackgroundGradientAlphaColor = System.Drawing.Color.Transparent;
+            this.lineNumbersForRichText1.BackgroundGradientBetaColor = System.Drawing.Color.LightSteelBlue;
+            this.lineNumbersForRichText1.BackgroundGradientDirection = System.Drawing.Drawing2D.LinearGradientMode.Horizontal;
+            this.lineNumbersForRichText1.BorderLinesColor = System.Drawing.Color.SlateGray;
+            this.lineNumbersForRichText1.BorderLinesStyle = System.Drawing.Drawing2D.DashStyle.Dot;
+            this.lineNumbersForRichText1.BorderLinesThickness = 1F;
+            this.lineNumbersForRichText1.DockSide = LineNumbersControlForRichTextBox.LineNumbersForRichText.LineNumberDockSide.Left;
+            this.lineNumbersForRichText1.ForeColor = System.Drawing.Color.White;
+            this.lineNumbersForRichText1.GridLinesColor = System.Drawing.Color.SlateGray;
+            this.lineNumbersForRichText1.GridLinesStyle = System.Drawing.Drawing2D.DashStyle.Dot;
+            this.lineNumbersForRichText1.GridLinesThickness = 1F;
+            this.lineNumbersForRichText1.LineNumbersAlignment = System.Drawing.ContentAlignment.TopRight;
+            this.lineNumbersForRichText1.LineNumbersAntiAlias = true;
+            this.lineNumbersForRichText1.LineNumbersAsHexadecimal = false;
+            this.lineNumbersForRichText1.LineNumbersClippedByItemRectangle = true;
+            this.lineNumbersForRichText1.LineNumbersLeadingZeroes = true;
+            this.lineNumbersForRichText1.LineNumbersOffset = new System.Drawing.Size(0, 0);
+            this.lineNumbersForRichText1.Location = new System.Drawing.Point(19, 28);
+            this.lineNumbersForRichText1.Margin = new System.Windows.Forms.Padding(0);
+            this.lineNumbersForRichText1.MarginLinesColor = System.Drawing.Color.SlateGray;
+            this.lineNumbersForRichText1.MarginLinesSide = LineNumbersControlForRichTextBox.LineNumbersForRichText.LineNumberDockSide.Right;
+            this.lineNumbersForRichText1.MarginLinesStyle = System.Drawing.Drawing2D.DashStyle.Solid;
+            this.lineNumbersForRichText1.MarginLinesThickness = 1F;
+            this.lineNumbersForRichText1.Name = "lineNumbersForRichText1";
+            this.lineNumbersForRichText1.Padding = new System.Windows.Forms.Padding(0, 0, 2, 0);
             this.lineNumbersForRichText1.ParentRichTextBox = this.richTextBox1;
+            this.lineNumbersForRichText1.SeeThroughMode = false;
+            this.lineNumbersForRichText1.ShowBackgroundGradient = true;
+            this.lineNumbersForRichText1.ShowBorderLines = true;
+            this.lineNumbersForRichText1.ShowGridLines = true;
+            this.lineNumbersForRichText1.ShowLineNumbers = true;
+            this.lineNumbersForRichText1.ShowMarginLines = true;
+            this.lineNumbersForRichText1.Size = new System.Drawing.Size(20, 521);
+            this.lineNumbersForRichText1.TabIndex = 3;
             // 
             // toolStrip1
             // 
@@ -123,18 +160,24 @@ namespace Compilador
             this.btnLimparTudo.Name = "btnLimparTudo";
             this.btnLimparTudo.Size = new System.Drawing.Size(21, 20);
             this.btnLimparTudo.Click += new System.EventHandler(this.btnLimparTudo_Click);
+            // 
             // richTextBoxErro
-            this.richTextBoxErro.Dock = DockStyle.Right;
-            this.richTextBoxErro.Width = 250;
-            this.richTextBoxErro.BackColor = Color.FromArgb(40, 42, 54);
-            this.richTextBoxErro.ForeColor = Color.FromArgb(255, 85, 85);
+            // 
+            this.richTextBoxErro.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(40)))), ((int)(((byte)(42)))), ((int)(((byte)(54)))));
+            this.richTextBoxErro.Dock = System.Windows.Forms.DockStyle.Right;
+            this.richTextBoxErro.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(85)))), ((int)(((byte)(85)))));
+            this.richTextBoxErro.Location = new System.Drawing.Point(526, 0);
+            this.richTextBoxErro.Name = "richTextBoxErro";
+            this.richTextBoxErro.Size = new System.Drawing.Size(250, 561);
+            this.richTextBoxErro.TabIndex = 1;
+            this.richTextBoxErro.Text = "";
             // 
             // lbNomeProjeto
             // 
             this.lbNomeProjeto.AutoSize = true;
             this.lbNomeProjeto.Font = new System.Drawing.Font("Consolas", 14.25F, System.Drawing.FontStyle.Bold);
             this.lbNomeProjeto.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(184)))), ((int)(((byte)(108)))));
-            this.lbNomeProjeto.Location = new Point(10, 5);
+            this.lbNomeProjeto.Location = new System.Drawing.Point(10, 5);
             this.lbNomeProjeto.Name = "lbNomeProjeto";
             this.lbNomeProjeto.Size = new System.Drawing.Size(160, 22);
             this.lbNomeProjeto.TabIndex = 0;
@@ -165,19 +208,7 @@ namespace Compilador
             this.ResumeLayout(false);
             this.PerformLayout();
 
-            // Evento para ajuste dinâmico no redimensionamento da tela
-            this.Resize += (s, e) =>
-            {
-                int width = this.ClientSize.Width;
-                int height = this.ClientSize.Height;
-
-                this.lineNumbersForRichText1.Size = new Size(40, height - 40);
-                this.richTextBox1.Size = new Size(width - this.lineNumbersForRichText1.Width - 290, height - 40);
-                this.richTextBoxErro.Size = new Size(250, height - 40);
-            };
-
         }
-
 
         #endregion
 
@@ -197,4 +228,3 @@ namespace Compilador
         private System.Windows.Forms.Label label1;
     }
 }
-
