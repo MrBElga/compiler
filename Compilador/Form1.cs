@@ -29,8 +29,6 @@ namespace Compilador
                 DefaultExt = "txt"
             };
             // Setup RichTextBoxErro - Keep your styling
-            richTextBoxErro.ForeColor = Color.Black; // Example: Set text color
-            richTextBoxErro.BackColor = Color.White; // Example: Set background
             richTextBoxErro.ReadOnly = true;
             richTextBoxErro.DoubleClick += RichTextBoxErro_DoubleClick; // Keep if you use this
             this.OnResize(EventArgs.Empty); // Keep if needed
