@@ -25,19 +25,17 @@ namespace Compilador.Analises
 
         public string AutomatoOPRelacao(string palavra)
         {
-            if (string.IsNullOrEmpty(palavra)) return $"ERRO : Operador relacional inválido ''"; // Removido \n
-
-            switch (palavra) // Verifica a string inteira
+            if (string.IsNullOrEmpty(palavra)) return null; // Ou erro se preferir, mas null é mais limpo aqui
+            switch (palavra)
             {
-                case "==": return $"{palavra} eh t_igualdade"; // Removido \n
-                case "!=": return $"{palavra} eh t_diferenca"; // Removido \n
-                case "<": return $"{palavra} eh t_menor";       // Removido \n
-                case ">": return $"{palavra} eh t_maior";       // Removido \n
-                case "<=": return $"{palavra} eh t_menor_igual"; // Removido \n
-                case ">=": return $"{palavra} eh t_maior_igual"; // Removido \n
+                case "==": return $"{palavra} eh t_igualdade";
+                case "!=": return $"{palavra} eh t_diferenca";
+                case "<": return $"{palavra} eh t_menor";
+                case ">": return $"{palavra} eh t_maior";
+                case "<=": return $"{palavra} eh t_menor_igual";
+                case ">=": return $"{palavra} eh t_maior_igual";
+                default: return null; // <--- RETORNA NULL SE NÃO FOR NENHUM DESTES
             }
-            // Se não for nenhum dos operadores válidos completos
-            return $"ERRO : Operador relacional inválido '{palavra}'"; // Removido \n
         }
 
         public string automatoNum(string palavra)
@@ -58,43 +56,40 @@ namespace Compilador.Analises
             return $"ERRO : Numero inválido '{palavra}'"; // Removido \n
         }
 
-        public string AutomatoOPComparacao(string palavra) // Renomeado para AutomatoOPLogico?
+        public string AutomatoOPComparacao(string palavra)
         {
-            if (string.IsNullOrEmpty(palavra)) return $"ERRO : Operador lógico inválido ''"; // Removido \n
-
-            switch (palavra) // Verifica a string inteira
+            if (string.IsNullOrEmpty(palavra)) return null;
+            switch (palavra)
             {
-                case "&&": return $"{palavra} eh t_logico_e"; // Removido \n
-                case "||": return $"{palavra} eh t_logico_ou"; // Removido \n
-                case "!": return $"{palavra} eh t_logico_nao"; // Removido \n (Nota: conflito com != se o lexer não separar bem)
+                case "&&": return $"{palavra} eh t_logico_e";
+                case "||": return $"{palavra} eh t_logico_ou";
+                case "!": return $"{palavra} eh t_logico_nao";
+                default: return null; // <--- RETORNA NULL SE NÃO FOR NENHUM DESTES
             }
-            return $"ERRO : Operador lógico inválido '{palavra}'"; // Removido \n
         }
 
         // NOVO: Método para operadores de Adição/Subtração
         public string AutomatoOpAddSub(string palavra)
         {
-            if (string.IsNullOrEmpty(palavra)) return $"ERRO : Operador inválido ''";
-
+            if (string.IsNullOrEmpty(palavra)) return null;
             switch (palavra)
             {
                 case "+": return $"{palavra} eh t_soma";
                 case "-": return $"{palavra} eh t_subtracao";
+                default: return null; // <--- RETORNA NULL SE NÃO FOR NENHUM DESTES
             }
-            return $"ERRO : Operador de adição/subtração inválido '{palavra}'";
         }
 
         // NOVO: Método para operadores de Multiplicação/Divisão
         public string AutomatoOpMulDiv(string palavra)
         {
-            if (string.IsNullOrEmpty(palavra)) return $"ERRO : Operador inválido ''";
-
+            if (string.IsNullOrEmpty(palavra)) return null;
             switch (palavra)
             {
                 case "*": return $"{palavra} eh t_multiplicacao";
                 case "/": return $"{palavra} eh t_divisao";
+                default: return null; // <--- RETORNA NULL SE NÃO FOR NENHUM DESTES
             }
-            return $"ERRO : Operador de multiplicação/divisão inválido '{palavra}'";
         }
     }
 }

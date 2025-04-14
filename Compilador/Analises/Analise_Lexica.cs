@@ -3,107 +3,211 @@ using System;
 using System.IO;
 using System.Text.RegularExpressions;
 using System.Collections.Generic;
+using System.Text;
 
 namespace Compilador.Analises
 {
     internal class Analise_Lexica
     {
-        private FileStream arquivo;
+        private readonly FileStream arquivo;
         private string[,] tbReservada;
-        private Automato automato; // Instanciado no construtor
+        private readonly Automato automato;
 
-        public Analise_Lexica(FileStream arq)
-        {
-            this.arquivo = arq;
-            this.automato = new Automato(); // Instancia Automato aqui
-            criarTabelaReservada();
-        }
-
-        private void criarTabelaReservada()
-        {
-            // Tabela SEM os operadores que serão tratados pelos automatos via firstOp*
-            tbReservada = new string[,] {
-                {"Program", "t_programa"}, {"Integer", "t_integer"}, {"Float", "t_float"},
-                {"Char", "t_char"}, {"String", "t_string"},
-                {"Boolean", "t_boolean"}, // <-- ADICIONADO O TIPO BOOLEAN AQUI
-                {"If", "t_if"}, {"Else", "t_else"}, {"While", "t_while"},
-                {"{", "t_abreBloco"}, {"}", "t_fechaBloco"}, {"(", "t_abreParen"},
-                {")", "t_fechaParen"}, {"=", "t_atribuicao"}, // Mantém '=' para atribuição
-                {",", "t_virgula"}, // Renomeado/Mantido
-                {".", "t_ponto"},   // Renomeado/Mantido
-                {";", "t_ponto_virgula"}, // Ponto e vírgula adicionado
-                {"true", "t_bool"}, {"false", "t_bool"} // Literais booleanos (t_bool)
-            };
-        }
-
+        // Construtor e criarTabelaReservada (sem alterações da última versão)
+        public Analise_Lexica(FileStream arq) { this.arquivo = arq ?? throw new ArgumentNullException(nameof(arq)); this.automato = new Automato(); criarTabelaReservada(); }
+        private void criarTabelaReservada() { tbReservada = new string[,] { { "Program", "t_programa" }, { "Integer", "t_integer" }, { "Float", "t_float" }, { "Char", "t_char" }, { "String", "t_string" }, { "Boolean", "t_boolean" }, { "If", "t_if" }, { "Else", "t_else" }, { "While", "t_while" }, { "{", "t_abreBloco" }, { "}", "t_fechaBloco" }, { "(", "t_abreParen" }, { ")", "t_fechaParen" }, { "=", "t_atribuicao" }, { ",", "t_virgula" }, { ".", "t_ponto" }, { ";", "t_ponto_virgula" }, { "true", "t_bool" }, { "false", "t_bool" } }; }
+        
         public List<(string TokenDescription, int LineNumber)> AnalisadorLexico()
         {
-            List<(string TokenDescription, int LineNumber)> relatorio = new List<(string, int)>();
+            var relatorio = new List<(string TokenDescription, int LineNumber)>();
+            var lexemaBuilder = new StringBuilder();
             int contLinha = 1;
 
-            StreamReader streamReader = new StreamReader(arquivo);
-            streamReader.BaseStream.Seek(0, SeekOrigin.Begin);
-
-            string linha;
-            while ((linha = streamReader.ReadLine()) != null)
+            using (var reader = new StreamReader(arquivo, Encoding.UTF8, true, 1024, true))
             {
-                // !!! ALERTA: Split ainda é a fonte de problemas para operadores juntos !!!
-                string[] tokens = linha.Split(new[] { ' ', '\t' }, StringSplitOptions.RemoveEmptyEntries);
-                foreach (string token in tokens)
+                if (arquivo.CanSeek) arquivo.Seek(0, SeekOrigin.Begin);
+
+                int peekInt;
+                while ((peekInt = reader.Peek()) != -1)
                 {
-                    if (!string.IsNullOrEmpty(token))
+                    char caractere = (char)peekInt;
+
+                    //Ignorar Espaços em Branco
+                    if (char.IsWhiteSpace(caractere))
                     {
-                        bool isReserved = false;
-                        // 1. Verificar Reservadas
-                        for (int j = 0; j < tbReservada.GetLength(0); j++)
+                        reader.Read(); // Consome o espaço
+                        if (caractere == '\n') contLinha++;
+                        continue;
+                    }
+
+                    //Identificadores OU Palavras Reservadas
+                    if (char.IsLetter(caractere))
+                    {
+                        reader.Read();
+                        lexemaBuilder.Clear();
+                        lexemaBuilder.Append(caractere);
+                        while (reader.Peek() != -1 && char.IsLetterOrDigit((char)reader.Peek()))
                         {
-                            if (tbReservada[j, 0] == token)
-                            {
-                                relatorio.Add(($"{token} eh {tbReservada[j, 1]}", contLinha));
-                                isReserved = true;
+                            lexemaBuilder.Append((char)reader.Read());
+                        }
+                        string lexemaPotencial = lexemaBuilder.ToString();
+                        string tipoTokenReservado = BuscarPalavraReservada(lexemaPotencial);
+                        if (tipoTokenReservado != null) {
+                            relatorio.Add(($"{lexemaPotencial} eh {tipoTokenReservado}", contLinha));
+                        } else {
+                            string resAutomatoID = automato.AutomatoID(lexemaPotencial);
+                            relatorio.Add((resAutomatoID ?? $"ERRO : ID inválido ou falha no automato '{lexemaPotencial}'", contLinha));
+                        }
+                        continue;
+                    }
+
+                    //Números
+                    if (char.IsDigit(caractere))
+                    {
+                        reader.Read(); 
+                        lexemaBuilder.Clear();
+                        lexemaBuilder.Append(caractere);
+                        bool temPonto = false;
+                        while (reader.Peek() != -1) {
+                            char proxChar = (char)reader.Peek();
+                            if (char.IsDigit(proxChar)) {
+                                lexemaBuilder.Append((char)reader.Read());
+                            } else if (proxChar == '.' && !temPonto) {
+                                reader.Read(); 
+                                if (reader.Peek() != -1 && char.IsDigit((char)reader.Peek())) {
+                                    lexemaBuilder.Append('.');
+                                    lexemaBuilder.Append((char)reader.Read());
+                                    temPonto = true;
+                                } else {
+                                    lexemaBuilder.Append('.'); 
+                                    break;
+                                }
+                            } else {
                                 break;
                             }
                         }
-
-                        // 2. Se não reservado, chamar AnalyzeToken
-                        if (!isReserved)
-                        {
-                            string resultadoAnalise = AnalyzeToken(token);
-                            // Adiciona o resultado (seja token válido ou erro)
-                            relatorio.Add((resultadoAnalise, contLinha));
-                        }
+                        string numLexema = lexemaBuilder.ToString();
+                        string resultadoAutomatoNum = automato.automatoNum(numLexema);
+                         relatorio.Add((resultadoAutomatoNum ?? $"ERRO : Numero inválido ou falha no automato '{numLexema}'", contLinha));
+                         continue;
                     }
+
+                    // Literais de Char
+                    if (caractere == '\'')
+                    {
+                         reader.Read(); 
+                         lexemaBuilder.Clear();
+                         int charInternoInt = reader.Read();
+                         if (charInternoInt != -1) {
+                             char charInterno = (char)charInternoInt;
+                             int aspaFinalInt = reader.Read();
+                             if (aspaFinalInt != -1 && (char)aspaFinalInt == '\'') {
+                                 lexemaBuilder.Append(charInterno);
+                                 relatorio.Add(($"'{lexemaBuilder.ToString()}' eh t_char_literal", contLinha));
+                             } else {
+                                 lexemaBuilder.Append(charInterno);
+                                 if(aspaFinalInt != -1) lexemaBuilder.Append((char)aspaFinalInt);
+                                 relatorio.Add(($"ERRO : Char literal mal formado ''{lexemaBuilder.ToString()}...", contLinha));
+                             }
+                         } else {
+                             relatorio.Add(($"ERRO : Fim de arquivo inesperado em char literal", contLinha));
+                         }
+                         continue;
+                    }
+
+                    //Literais de String
+                    if (caractere == '"')
+                    {
+                         reader.Read();
+                         lexemaBuilder.Clear();
+                         bool stringFechada = false;
+                         while (reader.Peek() != -1) {
+                             char proxChar = (char)reader.Read();
+                             if (proxChar == '"') { stringFechada = true; break; }
+                             if (proxChar == '\n') { stringFechada = false; contLinha++; break; }
+                             lexemaBuilder.Append(proxChar);
+                         }
+                         string strLexema = lexemaBuilder.ToString();
+                         if (stringFechada) { relatorio.Add(($"\"{strLexema}\" eh t_string_literal", contLinha)); }
+                         else { relatorio.Add(($"ERRO : String literal não fechada ou contém nova linha \"{strLexema}...", contLinha)); }
+                         continue;
+                    }
+
+                    else
+                    {
+                        char charConsumido = (char)reader.Read();
+                        string op1 = charConsumido.ToString();
+                        string resultadoFinal = null;
+
+                        if (IsPotentialTwoCharOpStart(charConsumido) && reader.Peek() != -1)
+                        {
+                            char proxChar = (char)reader.Peek();
+                            string op2 = op1 + proxChar;
+                            string resAutomato2 = automato.AutomatoOPRelacao(op2);
+                            if (resAutomato2 == null) resAutomato2 = automato.AutomatoOPComparacao(op2);
+
+                            if (resAutomato2 != null && !resAutomato2.StartsWith("ERRO"))
+                            {
+                                reader.Read();
+                                resultadoFinal = resAutomato2;
+                            }
+                        }
+
+                        if (resultadoFinal == null)
+                        {
+                            string tipoReservado = BuscarPalavraReservada(op1);
+                            if (tipoReservado != null)
+                            {
+                                resultadoFinal = $"{op1} eh {tipoReservado}";
+                            }
+                            else
+                            {
+                                // Chama os automatos em sequência. O primeiro que retornar algo válido é usado.
+                                string resAutomato1 = automato.AutomatoOPRelacao(op1);
+                                if (resAutomato1 == null) resAutomato1 = automato.AutomatoOPComparacao(op1);
+                                if (resAutomato1 == null) resAutomato1 = automato.AutomatoOpAddSub(op1);
+                                if (resAutomato1 == null) resAutomato1 = automato.AutomatoOpMulDiv(op1);
+
+                                // Verifica se algum automato retornou um token válido (ignora erros aqui, trata abaixo)
+                                if (resAutomato1 != null && !resAutomato1.StartsWith("ERRO"))
+                                {
+                                    resultadoFinal = resAutomato1;
+                                }
+                            }
+                        }
+
+                        if (resultadoFinal != null)
+                        {
+                            relatorio.Add((resultadoFinal, contLinha));
+                        }
+                        else
+                        {
+                            relatorio.Add(($"ERRO : Caractere/Símbolo inesperado '{op1}'", contLinha));
+                        }
+                        continue; 
+                    } 
+
                 }
-                contLinha++;
-            }
-            streamReader.Close();
+            } 
+
             return relatorio;
         }
 
-        // AnalyzeToken chama os first* na ordem correta
-        private string AnalyzeToken(string token)
+        private bool IsPotentialTwoCharOpStart(char c)
         {
-            string retorno = null;
+            return c == '=' || c == '!' || c == '<' || c == '>' || c == '&' || c == '|';
+        }
 
-            retorno = firstID(token);
-            if (retorno == null) retorno = firstNum(token);
-            if (retorno == null) retorno = firstOpRelacao(token); // Chamando para ==, !=, <, >, <=, >=
-            if (retorno == null) retorno = firstOpLogico(token);   // Chamando para &&, ||, !
-            if (retorno == null) retorno = firstOpAddSub(token); // Chamando para +, -
-            if (retorno == null) retorno = firstOpMulDiv(token); // Chamando para *, /
-
-            if (retorno == null)
+        private string BuscarPalavraReservada(string lexema)
+        {
+            for (int j = 0; j < tbReservada.GetLength(0); j++)
             {
-                // Nenhum método classificou, retorna erro sem \n
-                retorno = $"ERRO : '{token}' não pertence à Gramática ou é inválido";
+                if (tbReservada[j, 0] == lexema) { return tbReservada[j, 1]; }
             }
-
-            // Os métodos chamados já devem retornar sem \n
-            return retorno;
+            return null;
         }
 
         // --- Métodos first* ---
-        // Verificam caractere inicial e chamam Automato correspondente
 
         private string firstID(string token)
         {
@@ -138,11 +242,9 @@ namespace Compilador.Analises
             if (string.IsNullOrEmpty(token)) return null;
             // Verifica se PODE começar como um op lógico
             char startChar = token[0];
-            if (startChar == '&' || startChar == '|' || startChar == '!') // Adapte se usar outros símbolos
+            if (startChar == '&' || startChar == '|' || startChar == '!')
             {
-                // Chama Automato e retorna o resultado (formatado ou erro)
-                // Atenção ao nome do método em Automato.cs (usei AutomatoOPComparacao antes, mudei para AutomatoOPLogico para clareza)
-                return automato.AutomatoOPComparacao(token); // Ou automato.AutomatoOPLogico(token) se renomeou
+                return automato.AutomatoOPComparacao(token);
             }
             return null;
         }

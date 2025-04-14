@@ -248,11 +248,6 @@ namespace Compilador
             var match = Regex.Match(errorMessage, @"\'([^\']+)\'");
             return match.Success ? match.Groups[1].Value : "[?] ";
         }
-
-        // --- Keep Highlighting and GoToLine methods if you implement them ---
-        // private void HighlightErrorLine(int lineNumber) { ... }
-        // private string ExtractErrorToken(string line) { ... } // Might need adjustment based on error message format
-        // private void ResetEditorHighlight() { ... }
         private void RichTextBoxErro_DoubleClick(object sender, EventArgs e)
         {
             try
@@ -284,12 +279,12 @@ namespace Compilador
         {
             if (lineNumber >= 0 && lineNumber < richTextBox1.Lines.Length)
             {
-                richTextBox1.Focus(); // Focus the editor first
+                richTextBox1.Focus();
                 int start = richTextBox1.GetFirstCharIndexFromLine(lineNumber);
-                if (start >= 0) // Ensure valid index
+                if (start >= 0) 
                 {
-                    richTextBox1.Select(start, 0); // Select position at the start of the line
-                    richTextBox1.ScrollToCaret(); // Scroll to make it visible
+                    richTextBox1.Select(start, 0);
+                    richTextBox1.ScrollToCaret();
                 }
             }
         }
@@ -299,14 +294,14 @@ namespace Compilador
         #endregion
 
         #region Helpers
-        // --- Keep your ShowError method ---
+
         private void ShowError(string title, string message)
         {
             MessageBox.Show($"Erro: {message}", title, MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
         #endregion
 
-        // --- Keep any other Form methods (like OnResize, Load, etc.) ---
+
 
     }
 }
