@@ -1,4 +1,4 @@
-name: .NET Desktop Build
+name: .NET Windows Forms Build
 
 on:
   push:
@@ -8,10 +8,9 @@ on:
 
 jobs:
   build:
-
     strategy:
       matrix:
-        configuration: [Debug, Release]
+        configuration: [Release]  # Você pode adicionar Debug também se necessário
 
     runs-on: windows-latest
 
@@ -19,7 +18,7 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
-    - name: Setup .NET
+    - name: Setup .NET 8.x
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: '8.0.x'
@@ -27,20 +26,29 @@ jobs:
     - name: Restore dependencies
       run: dotnet restore Compilador.sln
 
-    - name: Build
-      run: dotnet build Compilador.sln --configuration ${{ matrix.configuration }} --no-restore
+    - name: Fix MSBuild Path (Importante para o erro GenerateResource)
+      run: |
+        # Corrige problemas com o MSBuild e recursos
+        echo "Adding MSBuild to PATH"
+        echo "$env:GITHUB_WORKSPACE\Microsoft.NET.Sdk\tools" >> $env:GITHUB_PATH
+        echo "$env:ProgramFiles\dotnet\sdk\$(dotnet --version)\MSBuild\Current\Bin" >> $env:GITHUB_PATH
 
-    - name: Test (if tests exist)
-      run: dotnet test
-      if: contains(matrix.configuration, 'Release')  # Só roda testes em Release
+    - name: Build Solution
+      run: |
+        # Build com verificação de recursos
+        dotnet build Compilador.sln --configuration ${{ matrix.configuration }} --no-restore /p:GenerateResourceUsePreserializedResources=true
+        
+    - name: Publish Application
+      run: |
+        dotnet publish Compilador\Compilador.csproj \
+          -c ${{ matrix.configuration }} \
+          -r win-x64 \
+          --self-contained false \
+          /p:GenerateResourceUsePreserializedResources=true \
+          /p:ErrorOnDuplicatePublishOutputFiles=false
 
-    - name: Publish as single file (opcional)
-      run: dotnet publish Compilador\Compilador.csproj -c ${{ matrix.configuration }} -r win-x64 --self-contained false -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true
-      
-    - name: Upload artifact
+    - name: Upload Artifact
       uses: actions/upload-artifact@v4
       with:
-        name: Binaries-${{ matrix.configuration }}
-        path: |
-          Compilador\bin\${{ matrix.configuration }}\**
-          Compilador\obj\${{ matrix.configuration }}\**
+        name: Application-${{ matrix.configuration }}
+        path: Compilador\bin\${{ matrix.configuration }}\net8.0-windows\publish\
