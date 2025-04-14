@@ -8,11 +8,10 @@ on:
 
 jobs:
   build:
+    runs-on: windows-latest
     strategy:
       matrix:
-        configuration: [Release]  # Você pode adicionar Debug também se necessário
-
-    runs-on: windows-latest
+        configuration: [Release]
 
     steps:
     - name: Checkout code
@@ -26,18 +25,19 @@ jobs:
     - name: Restore dependencies
       run: dotnet restore Compilador.sln
 
-    - name: Fix MSBuild Path (Importante para o erro GenerateResource)
-      run: |
-        # Corrige problemas com o MSBuild e recursos
-        echo "Adding MSBuild to PATH"
-        echo "$env:GITHUB_WORKSPACE\Microsoft.NET.Sdk\tools" >> $env:GITHUB_PATH
-        echo "$env:ProgramFiles\dotnet\sdk\$(dotnet --version)\MSBuild\Current\Bin" >> $env:GITHUB_PATH
+    - name: Install Windows Desktop SDK
+      run: dotnet workload install windowsdesktop
 
-    - name: Build Solution
+    - name: Build Solution (Workaround for GenerateResource)
+      shell: cmd
       run: |
-        # Build com verificação de recursos
-        dotnet build Compilador.sln --configuration ${{ matrix.configuration }} --no-restore /p:GenerateResourceUsePreserializedResources=true
-        
+        set MSBUILDDISABLENODEREUSE=1
+        dotnet build Compilador.sln -c %configuration% ^
+          /p:GenerateResourceUsePreserializedResources=true ^
+          /p:UseSharedCompilation=false ^
+          /p:BuildInParallel=false ^
+          /nr:false
+
     - name: Publish Application
       run: |
         dotnet publish Compilador\Compilador.csproj \
