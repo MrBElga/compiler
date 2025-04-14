@@ -1,4 +1,4 @@
-name: .NET Windows Forms Build
+name: Build Windows Forms App
 
 on:
   push:
@@ -9,46 +9,60 @@ on:
 jobs:
   build:
     runs-on: windows-latest
-    strategy:
-      matrix:
-        configuration: [Release]
+    env:
+      DOTNET_CLI_TELEMETRY_OPTOUT: 1
+      DOTNET_SKIP_FIRST_TIME_EXPERIENCE: 1
+      MSBUILDDISABLENODEREUSE: 1
 
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Clean workspace
+      run: |
+        Remove-Item -Recurse -Force Compilador/obj, Compilador/bin -ErrorAction SilentlyContinue
 
     - name: Setup .NET 8.x
       uses: actions/setup-dotnet@v4
       with:
-        dotnet-version: '8.0.x'
+        dotnet-version: |
+          8.0.x
+          Microsoft.WindowsDesktop.App.Ref
+
+    - name: Install required workloads
+      run: dotnet workload install windowsdesktop --skip-manifest-update
 
     - name: Restore dependencies
-      run: dotnet restore Compilador.sln
+      run: dotnet restore Compilador.sln --verbosity detailed
 
-    - name: Install Windows Desktop SDK
-      run: dotnet workload install windowsdesktop
-
-    - name: Build Solution (Workaround for GenerateResource)
-      shell: cmd
+    - name: Build with resource workaround
+      shell: powershell
       run: |
-        set MSBUILDDISABLENODEREUSE=1
-        dotnet build Compilador.sln -c %configuration% ^
-          /p:GenerateResourceUsePreserializedResources=true ^
-          /p:UseSharedCompilation=false ^
-          /p:BuildInParallel=false ^
+        $env:UseSharedCompilation = "false"
+        dotnet build Compilador.sln `
+          -c Release `
+          --no-restore `
+          /p:GenerateResourceUsePreserializedResources=true `
+          /p:BuildInParallel=false `
+          /p:UseTaskHost=false `
           /nr:false
 
-    - name: Publish Application
+    - name: Publish application
       run: |
-        dotnet publish Compilador\Compilador.csproj \
-          -c ${{ matrix.configuration }} \
-          -r win-x64 \
-          --self-contained false \
-          /p:GenerateResourceUsePreserializedResources=true \
-          /p:ErrorOnDuplicatePublishOutputFiles=false
+        dotnet publish Compilador/Compilador.csproj `
+          -c Release `
+          -r win-x64 `
+          --self-contained false `
+          --no-build `
+          /p:PublishSingleFile=true `
+          /p:IncludeNativeLibrariesForSelfExtract=true
 
-    - name: Upload Artifact
+    - name: Upload artifacts
       uses: actions/upload-artifact@v4
       with:
-        name: Application-${{ matrix.configuration }}
-        path: Compilador\bin\${{ matrix.configuration }}\net8.0-windows\publish\
+        name: CompiledApp
+        path: |
+          Compilador/bin/Release/net8.0-windows/publish/*
+          Compilador/bin/Release/net8.0-windows/*.exe
