@@ -14,9 +14,9 @@ namespace Compilador.Analises
         // Synchronization sets (pode precisar refinar com ';')
         private readonly HashSet<string> syncTokensPrograma = new HashSet<string> { "EOF" };
         private readonly HashSet<string> syncTokensBloco = new HashSet<string> {
-             "t_integer", "t_float", "t_char", "t_string", // Start of Decl
-             "t_id", "t_if", "t_while", "t_abreBloco",    // Start of Comando
-             "t_ponto_virgula", // Semicolon might be a recovery point
+             "t_integer", "t_float", "t_char", "t_string", "t_boolean", // Adicionado t_boolean
+             "t_id", "t_if", "t_while", "t_abreBloco",
+             "t_ponto_virgula",
              "t_fechaBloco", "EOF"
          };
         // ... outros sync sets podem incluir t_ponto_virgula ...
@@ -116,7 +116,7 @@ namespace Compilador.Analises
         // Função auxiliar para verificar se token é um tipo
         private bool IsTypeToken(string type)
         {
-            return type == "t_integer" || type == "t_float" || type == "t_char" || type == "t_string";
+            return type == "t_integer" || type == "t_float" || type == "t_char" || type == "t_string" || type == "t_boolean"; ;
         }
 
 

@@ -53,3 +53,14 @@ D:\compiler\Compilador\obj\Debug\Compilador.csproj.CoreCompileInputs.cache
 D:\compiler\Compilador\obj\Debug\Compilador.csproj.Up2Date
 D:\compiler\Compilador\obj\Debug\Compilador.exe
 D:\compiler\Compilador\obj\Debug\Compilador.pdb
+C:\Users\iagho\Source\Repos\compilerBelga\Compilador\bin\Debug\Compilador.exe.config
+C:\Users\iagho\Source\Repos\compilerBelga\Compilador\bin\Debug\Compilador.exe
+C:\Users\iagho\Source\Repos\compilerBelga\Compilador\bin\Debug\Compilador.pdb
+C:\Users\iagho\Source\Repos\compilerBelga\Compilador\obj\Debug\Compilador.csproj.AssemblyReference.cache
+C:\Users\iagho\Source\Repos\compilerBelga\Compilador\obj\Debug\Compilador.Form1.resources
+C:\Users\iagho\Source\Repos\compilerBelga\Compilador\obj\Debug\Compilador.Properties.Resources.resources
+C:\Users\iagho\Source\Repos\compilerBelga\Compilador\obj\Debug\Compilador.csproj.GenerateResource.cache
+C:\Users\iagho\Source\Repos\compilerBelga\Compilador\obj\Debug\Compilador.csproj.CoreCompileInputs.cache
+C:\Users\iagho\Source\Repos\compilerBelga\Compilador\obj\Debug\Compilador.csproj.Up2Date
+C:\Users\iagho\Source\Repos\compilerBelga\Compilador\obj\Debug\Compilador.exe
+C:\Users\iagho\Source\Repos\compilerBelga\Compilador\obj\Debug\Compilador.pdb

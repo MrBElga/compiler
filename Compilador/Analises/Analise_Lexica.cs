@@ -24,14 +24,15 @@ namespace Compilador.Analises
             // Tabela SEM os operadores que serão tratados pelos automatos via firstOp*
             tbReservada = new string[,] {
                 {"Program", "t_programa"}, {"Integer", "t_integer"}, {"Float", "t_float"},
-                {"Char", "t_char"}, {"String", "t_string"}, {"If", "t_if"},
-                {"Else", "t_else"}, {"While", "t_while"}, {"{", "t_abreBloco"},
-                {"}", "t_fechaBloco"}, {"(", "t_abreParen"}, {")", "t_fechaParen"},
-                {"=", "t_atribuicao"}, // Mantém '=' para atribuição
+                {"Char", "t_char"}, {"String", "t_string"},
+                {"Boolean", "t_boolean"}, // <-- ADICIONADO O TIPO BOOLEAN AQUI
+                {"If", "t_if"}, {"Else", "t_else"}, {"While", "t_while"},
+                {"{", "t_abreBloco"}, {"}", "t_fechaBloco"}, {"(", "t_abreParen"},
+                {")", "t_fechaParen"}, {"=", "t_atribuicao"}, // Mantém '=' para atribuição
                 {",", "t_virgula"}, // Renomeado/Mantido
                 {".", "t_ponto"},   // Renomeado/Mantido
                 {";", "t_ponto_virgula"}, // Ponto e vírgula adicionado
-                {"true", "t_bool"}, {"false", "t_bool"}
+                {"true", "t_bool"}, {"false", "t_bool"} // Literais booleanos (t_bool)
             };
         }
 
