@@ -1,4 +1,4 @@
-name: .NET Core Desktop
+name: .NET Desktop Build
 
 on:
   push:
@@ -8,72 +8,39 @@ on:
 
 jobs:
   build:
+
     strategy:
       matrix:
         configuration: [Debug, Release]
-    
+
     runs-on: windows-latest
-    
-    env:
-      Solution_Name: Compilador.sln
-      Test_Project_Path: Compilador.tests.csproj
-      Wap_Project_Directory: Compilador.Package
-      Wap_Project_Path: Compilador.Package\Compilador.Package.wapproj
 
     steps:
-    # 1. Checkout do código
-    - name: Checkout
+    - name: Checkout code
       uses: actions/checkout@v4
-      with:
-        fetch-depth: 0
 
-    # 2. Configuração do ambiente .NET
-    - name: Install .NET Core
+    - name: Setup .NET
       uses: actions/setup-dotnet@v4
       with:
-        dotnet-version: 8.0.x
+        dotnet-version: '8.0.x'
 
-    # 3. Configuração do MSBuild
-    - name: Setup MSBuild.exe
-      uses: microsoft/setup-msbuild@v2
+    - name: Restore dependencies
+      run: dotnet restore Compilador.sln
 
-    # 4. Execução dos testes
-    - name: Execute unit tests
+    - name: Build
+      run: dotnet build Compilador.sln --configuration ${{ matrix.configuration }} --no-restore
+
+    - name: Test (if tests exist)
       run: dotnet test
+      if: contains(matrix.configuration, 'Release')  # Só roda testes em Release
 
-    # 5. Restauração de pacotes
-    - name: Restore the application
-      run: msbuild $env:Solution_Name /t:Restore /p:Configuration=$env:Configuration
-      env:
-        Configuration: ${{ matrix.configuration }}
-
-    # 6. Decodificação do certificado de assinatura (PFX)
-    - name: Decode the pfx
-      run: |
-        $pfx_cert_byte = [System.Convert]::FromBase64String("${{ secrets.Base64_Encoded_Pfx }}")
-        $certificatePath = Join-Path -Path $env:Wap_Project_Directory -ChildPath GitHubActionsWorkflow.pfx
-        $directory = [System.IO.Path]::GetDirectoryName($certificatePath)
-        if (-not (Test-Path $directory)) {
-            New-Item -Path $directory -ItemType Directory -Force
-        }
-        [IO.File]::WriteAllBytes($certificatePath, $pfx_cert_byte)
-
-    # 7. Criação do pacote de aplicativo
-    - name: Create the app package
-      run: msbuild $env:Wap_Project_Path /p:Configuration=$env:Configuration /p:UapAppxPackageBuildMode=$env:Appx_Package_Build_Mode /p:AppxBundle=$env:Appx_Bundle /p:PackageCertificateKeyFile=GitHubActionsWorkflow.pfx /p:PackageCertificatePassword=${{ secrets.Pfx_Key }}
-      env:
-        Appx_Bundle: Always
-        Appx_Bundle_Platforms: x86|x64
-        Appx_Package_Build_Mode: StoreUpload
-        Configuration: ${{ matrix.configuration }}
-
-    # 8. Remoção do certificado PFX após o uso
-    - name: Remove the pfx
-      run: Remove-Item -path $env:Wap_Project_Directory\GitHubActionsWorkflow.pfx
-
-    # 9. Upload do pacote MSIX como artefato
-    - name: Upload build artifacts
+    - name: Publish as single file (opcional)
+      run: dotnet publish Compilador\Compilador.csproj -c ${{ matrix.configuration }} -r win-x64 --self-contained false -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true
+      
+    - name: Upload artifact
       uses: actions/upload-artifact@v4
       with:
-        name: MSIX Package
-        path: ${{ env.Wap_Project_Directory }}\AppPackages
+        name: Binaries-${{ matrix.configuration }}
+        path: |
+          Compilador\bin\${{ matrix.configuration }}\**
+          Compilador\obj\${{ matrix.configuration }}\**
