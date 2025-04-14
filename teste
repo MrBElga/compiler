@@ -1,0 +1,24 @@
+Program teste 
+{
+ Integer a = 10 , b = 20 ;
+ a = 20 ;
+ Float c = 5.0 , l = 0 ;
+ l = 15.8745 ;
+ Char letra = 'a' ;
+ String texto = "reginaldo computação claramente entende!" ;
+ Boolean cor = true ;
+
+ If ( a <= true ) 
+ {
+   While ( a != 20 ) 
+   {
+
+     a = a - b ;
+   }
+ } 
+ Else
+ { 
+  b = 2 ;
+  a = b / 2 * 10 + 10 - 10 ;
+ }
+}
