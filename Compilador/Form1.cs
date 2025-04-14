@@ -36,7 +36,7 @@ namespace Compilador
         private void abrirToolStripButton_Click(object sender, EventArgs e) { if (openFileDialog1.ShowDialog() == DialogResult.OK) { OpenFile(openFileDialog1.FileName); } }
         private void salvarToolStripButton_Click(object sender, EventArgs e) { SaveFile(); }
         private void ClearEditor() { richTextBox1.Clear(); richTextBoxErro.Clear(); currentFilePath = string.Empty; lbNomeProjeto.Text = "Novo Projeto"; richTextBox1.Focus(); }
-        private void OpenFile(string filePath) { try { richTextBox1.Text = File.ReadAllText(filePath); currentFilePath = filePath; lbNomeProjeto.Text = Path.GetFileName(filePath); richTextBoxErro.Clear(); } catch (Exception ex) { ShowError("Erro ao abrir arquivo", ex.Message); } }
+        private void OpenFile(string filePath) { try { richTextBox1.Text = File.ReadAllText(filePath); currentFilePath = filePath; lbNomeProjeto.Text = Path.GetFileName(filePath); richTextBoxErro.Clear(); ResetEditorHighlight(); } catch (Exception ex) { ShowError("Erro ao abrir arquivo", ex.Message); } }
         private void SaveFile()
         {
             try
@@ -49,12 +49,10 @@ namespace Compilador
                     }
                     else
                     {
-                        // Ensure currentFilePath is empty if user cancels Save As
                         currentFilePath = string.Empty;
                         return;
                     }
                 }
-                // Check again if currentFilePath is valid before writing
                 if (!string.IsNullOrEmpty(currentFilePath))
                 {
                     File.WriteAllText(currentFilePath, richTextBox1.Text);
@@ -64,7 +62,6 @@ namespace Compilador
             catch (Exception ex)
             {
                 ShowError("Erro ao salvar arquivo", ex.Message);
-                // Reset currentFilePath if saving fails to avoid issues
                 currentFilePath = string.Empty;
             }
         }
@@ -75,7 +72,7 @@ namespace Compilador
         private void btnNegrito_Click(object sender, EventArgs e) { ToggleFontStyle(FontStyle.Bold); }
         private void btnItalico_Click(object sender, EventArgs e) { ToggleFontStyle(FontStyle.Italic); }
         private void btnSublinhar_Click(object sender, EventArgs e) { ToggleFontStyle(FontStyle.Underline); }
-        private void btnLimparTudo_Click(object sender, EventArgs e) { ClearEditor(); }
+        private void btnLimparTudo_Click(object sender, EventArgs e) { ClearEditor(); ResetEditorHighlight(); }
         #endregion
 
         #region Compiler
@@ -102,6 +99,10 @@ namespace Compilador
             bool hasSyntaxErrors = false;
             List<Token> listaTokens = new List<Token>();
 
+            string reportPath = Path.Combine(
+                Path.GetDirectoryName(currentFilePath),
+                $"{Path.GetFileNameWithoutExtension(currentFilePath)}_relatorioAnaliseLexica.txt");
+
             try
             {
                 using (var fileStream = new FileStream(currentFilePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
@@ -109,9 +110,6 @@ namespace Compilador
                     var analiseLexica = new Analise_Lexica(fileStream);
                     var relatorioLexico = analiseLexica.AnalisadorLexico();
 
-                    string reportPath = Path.Combine(
-                        Path.GetDirectoryName(currentFilePath),
-                        $"{Path.GetFileNameWithoutExtension(currentFilePath)}_relatorioAnaliseLexica.txt");
                     try
                     {
                         File.WriteAllLines(reportPath, relatorioLexico.Select(r => $"Linha {r.LineNumber}: {r.TokenDescription}"));
@@ -161,7 +159,6 @@ namespace Compilador
                             }
                             richTextBoxErro.AppendText($"  Linha {lex.LineNumber}: {description}\n");
                             hasLexicalErrors = true;
-
                             HighlightErrorLine(lex.LineNumber, Color.FromArgb(90, 255, 85, 85));
                         }
                         else if (tokenType != "VAZIO")
@@ -179,50 +176,39 @@ namespace Compilador
                         richTextBoxErro.SelectionFont = new Font(richTextBoxErro.Font, FontStyle.Bold);
                         richTextBoxErro.AppendText("✓ Análise Léxica concluída com sucesso!\n");
                     }
-                    if (File.Exists(reportPath)) // Only mention report if it was likely created
+                    if (File.Exists(reportPath))
                     {
                         richTextBoxErro.AppendText($"* Relatório de Análise Léxica Gerado em: {reportPath}\n");
                     }
                     richTextBoxErro.AppendText("------------------------------------------------------\n");
-                }
 
-                if (!hasLexicalErrors)
+                } 
+                var analiseSintatica = new AnaliseSintatica(listaTokens);
+                analiseSintatica.Parse();
+
+                if (analiseSintatica.Erros.Any())
                 {
-                    var analiseSintatica = new AnaliseSintatica(listaTokens);
-                    analiseSintatica.Parse();
+                    hasSyntaxErrors = true;
+                    richTextBoxErro.SelectionColor = Color.Orange;
+                    richTextBoxErro.SelectionFont = new Font(richTextBoxErro.Font, FontStyle.Bold);
+                    richTextBoxErro.AppendText("❌ Erros Sintáticos Encontrados:\n");
 
-                    if (analiseSintatica.Erros.Any())
+                    foreach (var erroSintatico in analiseSintatica.Erros)
                     {
-                        hasSyntaxErrors = true;
-                        richTextBoxErro.SelectionColor = Color.Orange;
-                        richTextBoxErro.SelectionFont = new Font(richTextBoxErro.Font, FontStyle.Bold);
-                        richTextBoxErro.AppendText("❌ Erros Sintáticos Encontrados:\n");
-
-                        foreach (var erroSintatico in analiseSintatica.Erros)
+                        richTextBoxErro.AppendText($"  {erroSintatico}\n");
+                        Match match = Regex.Match(erroSintatico, @"(?:Linha|na Linha)\s+(\d+):");
+                        if (match.Success && int.TryParse(match.Groups[1].Value, out int lineNo))
                         {
-                            richTextBoxErro.AppendText($"  {erroSintatico}\n");
-
-                            Match match = Regex.Match(erroSintatico, @"(?:Linha|na Linha)\s+(\d+):");
-                            if (match.Success && int.TryParse(match.Groups[1].Value, out int lineNo))
-                            {
-                                HighlightErrorLine(lineNo, Color.FromArgb(90, 255, 165, 0));
-                            }
+                            HighlightErrorLine(lineNo, Color.FromArgb(90, 255, 165, 0));
                         }
-                        richTextBoxErro.AppendText("------------------------------------------------------\n");
                     }
-                    else
-                    {
-                        richTextBoxErro.SelectionColor = Color.Green;
-                        richTextBoxErro.SelectionFont = new Font(richTextBoxErro.Font, FontStyle.Bold);
-                        richTextBoxErro.AppendText("✓ Análise Sintática concluída com sucesso!\n");
-                        richTextBoxErro.AppendText("------------------------------------------------------\n");
-                    }
+                    richTextBoxErro.AppendText("------------------------------------------------------\n");
                 }
                 else
                 {
-                    richTextBoxErro.SelectionColor = Color.Red;
-                    richTextBoxErro.SelectionFont = new Font(richTextBoxErro.Font, FontStyle.Bold | FontStyle.Italic);
-                    richTextBoxErro.AppendText("ℹ️ Análise Sintática não executada devido a erros léxicos.\n");
+                    richTextBoxErro.SelectionColor = Color.Green;
+                    richTextBoxErro.SelectionFont = new Font(richTextBoxErro.Font, FontStyle.Bold);
+                    richTextBoxErro.AppendText("✓ Análise Sintática concluída com sucesso!\n");
                     richTextBoxErro.AppendText("------------------------------------------------------\n");
                 }
 
@@ -234,6 +220,13 @@ namespace Compilador
                     richTextBoxErro.AppendText("   Próximas etapas: Análise Semântica e Geração de Código.\n");
                     richTextBoxErro.AppendText("------------------------------------------------------\n");
                 }
+                else
+                {
+                
+                    richTextBoxErro.SelectionColor = Color.DarkRed;
+                    richTextBoxErro.SelectionFont = new Font(richTextBoxErro.Font, FontStyle.Bold);
+                    richTextBoxErro.AppendText("⚠️ Compilação concluída com erros.\n");
+                }
 
             }
             catch (IOException ioEx)
@@ -242,7 +235,7 @@ namespace Compilador
                 richTextBoxErro.SelectionColor = Color.Magenta;
                 richTextBoxErro.SelectionFont = new Font(richTextBoxErro.Font, FontStyle.Bold);
                 richTextBoxErro.AppendText($"💥 Erro de Arquivo: {ioEx.Message}\n");
-                hasLexicalErrors = true;
+                hasLexicalErrors = true; 
             }
             catch (Exception ex)
             {
@@ -250,7 +243,9 @@ namespace Compilador
                 richTextBoxErro.SelectionColor = Color.Magenta;
                 richTextBoxErro.SelectionFont = new Font(richTextBoxErro.Font, FontStyle.Bold);
                 richTextBoxErro.AppendText($"💥 Erro Fatal Inesperado: {ex.Message}\n");
+                
                 hasLexicalErrors = true;
+                hasSyntaxErrors = true;
             }
             finally
             {
@@ -269,12 +264,10 @@ namespace Compilador
         private void HighlightErrorLine(int lineNumber, Color highlightColor)
         {
             int zeroBasedLineNumber = lineNumber - 1;
-
             if (zeroBasedLineNumber >= 0 && zeroBasedLineNumber < richTextBox1.Lines.Length)
             {
                 int startIndex = richTextBox1.GetFirstCharIndexFromLine(zeroBasedLineNumber);
                 int lineLength = richTextBox1.Lines[zeroBasedLineNumber].Length;
-
                 if (startIndex >= 0)
                 {
                     richTextBox1.Select(startIndex, lineLength);
@@ -293,14 +286,10 @@ namespace Compilador
             {
                 int charIndex = richTextBoxErro.SelectionStart;
                 if (charIndex < 0 || charIndex >= richTextBoxErro.TextLength) return;
-
                 int lineIndex = richTextBoxErro.GetLineFromCharIndex(charIndex);
                 if (lineIndex < 0 || lineIndex >= richTextBoxErro.Lines.Length) return;
-
                 string lineText = richTextBoxErro.Lines[lineIndex];
-
                 var match = Regex.Match(lineText, @"(?:Linha|na Linha)\s+(\d+):");
-
                 if (match.Success && int.TryParse(match.Groups[1].Value, out int lineNumber))
                 {
                     GoToEditorLine(lineNumber - 1);
@@ -325,19 +314,17 @@ namespace Compilador
                 }
             }
         }
+
         private void ResetEditorHighlight()
         {
             int selectionStart = richTextBox1.SelectionStart;
             int selectionLength = richTextBox1.SelectionLength;
-
             richTextBox1.SelectAll();
             richTextBox1.SelectionBackColor = richTextBox1.BackColor;
             richTextBox1.SelectionColor = richTextBox1.ForeColor;
             richTextBox1.DeselectAll();
-
             richTextBox1.Select(selectionStart, selectionLength);
         }
-
         #endregion
 
         #region Helpers
@@ -346,6 +333,5 @@ namespace Compilador
             MessageBox.Show($"Erro: {message}", title, MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
         #endregion
-
     }
 }
