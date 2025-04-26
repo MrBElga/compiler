@@ -137,16 +137,15 @@ namespace Compilador.Analises
         {
             Consume("t_programa");
             Consume("t_id");
-            ParseBloco();
+            ParseBloco(false);
         }
 
-        private void ParseBloco()
+        private void ParseBloco(Boolean comandoEncontrado)
         {
 
             Consume("t_abreBloco");
             while (CurrentToken.Type != "t_fechaBloco" && CurrentToken.Type != "EOF")
             {
-                // Se já foi encontrado um comando e o próximo token for uma declaração, rejeite
                 if (comandoEncontrado && IsTypeToken(CurrentToken.Type))
                 {
                     ReportError($"Não é permitido declarar variáveis após um comando dentro do bloco.");
@@ -154,16 +153,15 @@ namespace Compilador.Analises
                 }
                 else
                 {
-                    // Se encontrar um tipo de variável, parse a declaração
                     if (IsTypeToken(CurrentToken.Type))
                     {
                         ParseDeclaracaoVariavel();
                     }
-                    // Se for um comando, marque que um comando foi encontrado
                     else if (IsComandoStartToken(CurrentToken.Type))
                     {
-                        comandoEncontrado = true;  // Marca que um comando foi encontrado
+                        comandoEncontrado = true;  
                         ParseComando();
+             
                     }
                     else
                     {
@@ -172,7 +170,6 @@ namespace Compilador.Analises
                     }
                 }
             }
-
             Consume("t_fechaBloco");
         }
 
@@ -226,7 +223,7 @@ namespace Compilador.Analises
             }
             else if (CurrentToken.Type == "t_abreBloco")
             {
-                ParseBloco();
+                ParseBloco(false);
             }
             else
             {
@@ -249,11 +246,11 @@ namespace Compilador.Analises
             Consume("t_abreParen");
             ParseExprRelacional();
             Consume("t_fechaParen");
-            ParseBloco();
+            ParseBloco(false);
 
             if (Match("t_else"))
             {
-                ParseBloco();
+                ParseBloco(false);
             }
         }
 
@@ -263,7 +260,7 @@ namespace Compilador.Analises
             Consume("t_abreParen");
             ParseExprRelacional();
             Consume("t_fechaParen");
-            ParseBloco();
+            ParseBloco(false);
         }
 
         private void ParseExprRelacional()
