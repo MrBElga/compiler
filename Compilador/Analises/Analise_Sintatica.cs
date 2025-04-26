@@ -8,6 +8,8 @@ namespace Compilador.Analises
     {
         private readonly List<Token> tokens;
         private int currentTokenIndex;
+        private bool comandoEncontrado = false;
+
         public List<string> Erros { get; }
 
         private readonly HashSet<string> syncTokensPrograma = new HashSet<string> { "EOF" };
@@ -135,32 +137,42 @@ namespace Compilador.Analises
         {
             Consume("t_programa");
             Consume("t_id");
-            ParseBloco();
+            ParseBloco(false);
         }
 
-        private void ParseBloco()
+        private void ParseBloco(Boolean comandoEncontrado)
         {
-            Consume("t_abreBloco");
 
+            Consume("t_abreBloco");
             while (CurrentToken.Type != "t_fechaBloco" && CurrentToken.Type != "EOF")
             {
-                if (IsTypeToken(CurrentToken.Type))
+                if (comandoEncontrado && IsTypeToken(CurrentToken.Type))
                 {
-                    ParseDeclaracaoVariavel();
-                }
-                else if (IsComandoStartToken(CurrentToken.Type))
-                {
-                    ParseComando();
+                    ReportError($"Não é permitido declarar variáveis após um comando dentro do bloco.");
+                    Synchronize(syncTokensBloco);
                 }
                 else
                 {
-                    ReportError($"Esperado declaração ou comando dentro do bloco, mas encontrou '{CurrentToken.Type}' ('{CurrentToken.Lexeme}')");
-                    Synchronize(syncTokensBloco);
+                    if (IsTypeToken(CurrentToken.Type))
+                    {
+                        ParseDeclaracaoVariavel();
+                    }
+                    else if (IsComandoStartToken(CurrentToken.Type))
+                    {
+                        comandoEncontrado = true;  
+                        ParseComando();
+             
+                    }
+                    else
+                    {
+                        ReportError($"Esperado declaração ou comando dentro do bloco, mas encontrou '{CurrentToken.Type}' ('{CurrentToken.Lexeme}')");
+                        Synchronize(syncTokensBloco);
+                    }
                 }
             }
-
             Consume("t_fechaBloco");
         }
+
 
         private bool IsComandoStartToken(string type) { return type == "t_if" || type == "t_while" || type == "t_id" || type == "t_abreBloco"; }
         private bool IsTypeToken(string type) { return type == "t_integer" || type == "t_float" || type == "t_char" || type == "t_string" || type == "t_boolean"; }
@@ -211,7 +223,7 @@ namespace Compilador.Analises
             }
             else if (CurrentToken.Type == "t_abreBloco")
             {
-                ParseBloco();
+                ParseBloco(false);
             }
             else
             {
@@ -234,11 +246,11 @@ namespace Compilador.Analises
             Consume("t_abreParen");
             ParseExprRelacional();
             Consume("t_fechaParen");
-            ParseBloco();
+            ParseBloco(false);
 
             if (Match("t_else"))
             {
-                ParseBloco();
+                ParseBloco(false);
             }
         }
 
@@ -248,7 +260,7 @@ namespace Compilador.Analises
             Consume("t_abreParen");
             ParseExprRelacional();
             Consume("t_fechaParen");
-            ParseBloco();
+            ParseBloco(false);
         }
 
         private void ParseExprRelacional()
