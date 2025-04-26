@@ -10,12 +10,12 @@ O objetivo é fornecer uma ferramenta didática que demonstre os conceitos funda
 
 * **Análise Léxica:**
     * Reconhecimento e classificação de tokens (palavras-chave, identificadores, operadores, literais, etc.).
-    * Geração de relatório detalhado da análise léxica em arquivo `.txt`[cite: 5, 6, 9, 13, 19, 20, 21, 22, 29, 33, 35, 41, 46, 47].
+    * Geração de relatório detalhado da análise léxica em arquivo `.txt`
 * **Análise Sintática:**
-    * Implementação de um analisador sintático preditivo descendente (LL(1))[cite: 3].
+    * Implementação de um analisador sintático preditivo descendente (LL(1)).
     * Validação da estrutura gramatical do código-fonte.
-    * Identificação precisa de erros sintáticos, indicando a linha e a natureza do erro[cite: 3].
-    * Fornecimento de mensagens de erro claras para auxiliar na correção[cite: 3].
+    * Identificação precisa de erros sintáticos, indicando a linha e a natureza do erro.
+    * Fornecimento de mensagens de erro claras para auxiliar na correção.
 * **Interface Gráfica (Windows Forms):**
     * Editor de código com numeração de linhas.
     * Painel para exibição de erros léxicos e sintáticos.
