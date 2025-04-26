@@ -8,7 +8,6 @@ namespace Compilador.Analises
     {
         private readonly List<Token> tokens;
         private int currentTokenIndex;
-        private bool comandoEncontrado = false;
         public List<string> Erros { get; }
 
         private readonly HashSet<string> syncTokensPrograma = new HashSet<string> { "EOF" };
@@ -142,37 +141,26 @@ namespace Compilador.Analises
         private void ParseBloco()
         {
             Consume("t_abreBloco");
-            comandoEncontrado = false;
+
             while (CurrentToken.Type != "t_fechaBloco" && CurrentToken.Type != "EOF")
             {
-                if (comandoEncontrado && IsTypeToken(CurrentToken.Type))
+                if (IsTypeToken(CurrentToken.Type))
                 {
-                    ReportError($"Não é permitido declarar variáveis após um comando dentro do bloco.");
-                    Synchronize(syncTokensBloco);
+                    ParseDeclaracaoVariavel();
+                }
+                else if (IsComandoStartToken(CurrentToken.Type))
+                {
+                    ParseComando();
                 }
                 else
                 {
-                    if (IsTypeToken(CurrentToken.Type))
-                    {
-                        ParseDeclaracaoVariavel();
-                    }
-                    else if (IsComandoStartToken(CurrentToken.Type))
-                    {
-                        comandoEncontrado = true;
-                        ParseComando();
-                    }
-                    else
-                    {
-                        ReportError($"Esperado declaração ou comando dentro do bloco, mas encontrou '{CurrentToken.Type}' ('{CurrentToken.Lexeme}')");
-                        Synchronize(syncTokensBloco);
-                    }
+                    ReportError($"Esperado declaração ou comando dentro do bloco, mas encontrou '{CurrentToken.Type}' ('{CurrentToken.Lexeme}')");
+                    Synchronize(syncTokensBloco);
                 }
-                
             }
 
             Consume("t_fechaBloco");
         }
-
 
         private bool IsComandoStartToken(string type) { return type == "t_if" || type == "t_while" || type == "t_id" || type == "t_abreBloco"; }
         private bool IsTypeToken(string type) { return type == "t_integer" || type == "t_float" || type == "t_char" || type == "t_string" || type == "t_boolean"; }
