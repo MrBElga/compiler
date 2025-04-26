@@ -2,6 +2,7 @@
 ![Framework](https://img.shields.io/badge/.NET-Framework%204.7.2-blueviolet.svg)
 ![Build](https://img.shields.io/badge/Build-MSBuild-lightgrey.svg)
 ![Status](https://img.shields.io/badge/Status-Academic%20Project-orange.svg)
+![License](https://img.shields.io/badge/License-MIT-yellow.svg)
 # Compilador Didático - Análise Léxica e Sintática
 
 ## 🚀 Sobre o Projeto
