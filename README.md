@@ -36,7 +36,7 @@ A linguagem de entrada suportada por este compilador foi definida com base nos r
 
 A gramática formal utilizada segue as regras para a construção de analisadores LL(1), garantindo uma análise sintática eficiente e sem ambiguidades.
 
-### Definição Formal da Gramática (BNF aproximada)
+### Definição Formal da Gramática em BNF
 
 ```bnf
 // Regra Inicial
