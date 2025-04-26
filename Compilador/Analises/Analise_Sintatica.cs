@@ -142,8 +142,7 @@ namespace Compilador.Analises
 
         private void ParseBloco()
         {
-            Consume("t_abreBloco");
-            comandoEncontrado = false;
+            Consume("t_abreBloco"); comandoEncontrado = false;
             while (CurrentToken.Type != "t_fechaBloco" && CurrentToken.Type != "EOF")
             {
                 // Se já foi encontrado um comando e o próximo token for uma declaração, rejeite
