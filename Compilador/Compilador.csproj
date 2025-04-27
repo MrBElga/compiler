@@ -51,6 +51,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Analises\Analise_Lexica.cs" />
+    <Compile Include="Analises\Analise_Semantica.cs" />
     <Compile Include="Analises\Analise_Sintatica.cs" />
     <Compile Include="Analises\Automato.cs" />
     <Compile Include="Analises\Token.cs" />

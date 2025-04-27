@@ -87,3 +87,14 @@ C:\desktop2\compiler\Compilador\obj\Debug\Compilador.csproj.CoreCompileInputs.ca
 C:\desktop2\compiler\Compilador\obj\Debug\Compilador.csproj.Up2Date
 C:\desktop2\compiler\Compilador\obj\Debug\Compilador.exe
 C:\desktop2\compiler\Compilador\obj\Debug\Compilador.pdb
+C:\Users\lyuis\Documents\GitHub\compiler\Compilador\bin\Debug\Compilador.exe.config
+C:\Users\lyuis\Documents\GitHub\compiler\Compilador\bin\Debug\Compilador.exe
+C:\Users\lyuis\Documents\GitHub\compiler\Compilador\bin\Debug\Compilador.pdb
+C:\Users\lyuis\Documents\GitHub\compiler\Compilador\obj\Debug\Compilador.csproj.AssemblyReference.cache
+C:\Users\lyuis\Documents\GitHub\compiler\Compilador\obj\Debug\Compilador.Form1.resources
+C:\Users\lyuis\Documents\GitHub\compiler\Compilador\obj\Debug\Compilador.Properties.Resources.resources
+C:\Users\lyuis\Documents\GitHub\compiler\Compilador\obj\Debug\Compilador.csproj.GenerateResource.cache
+C:\Users\lyuis\Documents\GitHub\compiler\Compilador\obj\Debug\Compilador.csproj.CoreCompileInputs.cache
+C:\Users\lyuis\Documents\GitHub\compiler\Compilador\obj\Debug\Compilador.csproj.Up2Date
+C:\Users\lyuis\Documents\GitHub\compiler\Compilador\obj\Debug\Compilador.exe
+C:\Users\lyuis\Documents\GitHub\compiler\Compilador\obj\Debug\Compilador.pdb
