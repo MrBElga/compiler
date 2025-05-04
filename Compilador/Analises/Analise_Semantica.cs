@@ -354,8 +354,6 @@ namespace Compilador.Analises
         {
             string tipoDeclarado = CurrentToken.Type;
             Advance(); // Consome o tipo (Integer, Float, etc.)
-
-            // Loop para analisar múltiplos IDs na mesma declaração (ex: Integer a, b = 10;)
             while (CurrentToken.Type == "t_id")
             {
                 string nomeVar = CurrentToken.Lexeme;
@@ -366,27 +364,20 @@ namespace Compilador.Analises
                 // encontrar um símbolo significa que já foi declarado no escopo global.
                 if (tabelaSimbolos.Buscar(nomeVar) != null)
                 {
-                    // Se encontrar um símbolo com o mesmo nome, é um erro de redeclaração.
-                    Erros.Add($"Erro Semântico na linha {linhaDeclaracao}: variável '{nomeVar}' já declarada neste escopo.");
-                    // Não adicionamos à tabela de símbolos novamente. Isso garante que usos posteriores
-                    // deste nome (se houver) se refiram à primeira declaração válida (ou ao erro, dependendo da implementação)
-                    // e evita problemas de ambiguidade interna na tabela.
+                   Erros.Add($"Erro Semântico na linha {linhaDeclaracao}: variável '{nomeVar}' já declarada neste escopo.");
                 }
                 else
                 {
-                    // Se a variável NÃO está declarada neste escopo, adicione-a à tabela de símbolos.
                     tabelaSimbolos.Adicionar(nomeVar, tipoDeclarado, linhaDeclaracao);
                 }
                 // --- Fim da adição da verificação ---
 
-                Advance(); // Consome o ID da variável
-
-                // Verifica se há inicialização para esta variável específica
+                Advance(); 
                 if (CurrentToken.Type == "t_atribuicao")
                 {
-                    Advance(); // Consome '='
+                    Advance(); 
                     // Analisa a expressão de inicialização e verifica compatibilidade de tipo
-                    string tipoAtribuido = AnalisarExpressao(tipoDeclarado); // Passa o tipo esperado
+                    string tipoAtribuido = AnalisarExpressao(tipoDeclarado); 
 
                     // Se a expressão de inicialização não teve erros internos e pudemos determinar seu tipo
                     if (tipoAtribuido != "ERRO")
@@ -395,29 +386,27 @@ namespace Compilador.Analises
                         if (!TiposCompativeis(tipoDeclarado, tipoAtribuido))
                         {
                             Erros.Add($"Erro Semântico na linha {linhaDeclaracao}: tipo incompatível na inicialização da variável '{nomeVar}' (esperado '{tipoDeclarado}', encontrado '{tipoAtribuido}').");
-                            // Embora haja um erro de tipo na inicialização, a variável existe.
-                            // Podemos optar por marcar como não inicializada semanticamente se a inicialização falhou.
                             var simbolo = tabelaSimbolos.Buscar(nomeVar); // Busca novamente, caso não tenha sido adicionada por ser duplicada
-                            if (simbolo != null) simbolo.Inicializado = false; // Falha na inicialização devido a tipo
+                            if (simbolo != null) simbolo.Inicializado = false; 
                         }
                         else
                         {
-                            // Inicialização bem-sucedida semanticamente (tipo compatível)
-                            var simbolo = tabelaSimbolos.Buscar(nomeVar); // Busca para marcar como inicializada
+                            var simbolo = tabelaSimbolos.Buscar(nomeVar);
                             if (simbolo != null) simbolo.Inicializado = true;
                         }
                     }
                     else
                     {
                         // A expressão de inicialização continha erros, a variável não é considerada inicializada com sucesso por esta atribuição.
-                        var simbolo = tabelaSimbolos.Buscar(nomeVar); // Busca para marcar status
-                        if (simbolo != null) simbolo.Inicializado = false; // Falha na inicialização devido a erro na expressão
+                        var simbolo = tabelaSimbolos.Buscar(nomeVar);
+                        if (simbolo != null) simbolo.Inicializado = false;
                     }
 
                 }
                 else
                 {
                     // Variável declarada sem inicialização explícita (Inicializado permanece false por padrão na TabelaSimbolos)
+
                 }
 
                 // Verifica se há mais IDs na mesma declaração (separados por vírgula)
