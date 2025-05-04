@@ -218,15 +218,25 @@ namespace Compilador
 
                 if (analiseSemantica.Erros.Any())
                 {
-                    hasSemanticaxErrors = true;
-                    richTextBoxErro.SelectionColor = Color.Purple;
-                    richTextBoxErro.SelectionFont = new Font(richTextBoxErro.Font, FontStyle.Bold);
-                    richTextBoxErro.AppendText("❌ Erros Semânticos Encontrados:\n");
+                    hasSemanticaxErrors = true; // Mantido
+                    richTextBoxErro.SelectionColor = Color.Purple; // Mantido
+                    richTextBoxErro.SelectionFont = new Font(richTextBoxErro.Font, FontStyle.Bold); // Mantido
+                    richTextBoxErro.AppendText("❌ Erros Semânticos Encontrados:\n"); // Mantido
                     foreach (var erroSemantico in analiseSemantica.Erros)
                     {
-                        richTextBoxErro.AppendText($"  {erroSemantico}\n");
+                        richTextBoxErro.AppendText($"  {erroSemantico}\n"); // Mantido
+
+                        // --- Adicionar esta parte ---
+                        // Extrai o número da linha da mensagem de erro semântico
+                        Match match = Regex.Match(erroSemantico, @"(?:linha|Linha)\s+(\d+):");
+                        if (match.Success && int.TryParse(match.Groups[1].Value, out int lineNo))
+                        {
+                            // Chama a função para destacar a linha no editor
+                            HighlightErrorLine(lineNo, Color.FromArgb(90, 128, 0, 128)); // Cor Roxo Semi-Transparente
+                        }
+                        // --- Fim da adição ---
                     }
-                    richTextBoxErro.AppendText("------------------------------------------------------\n");
+                    richTextBoxErro.AppendText("------------------------------------------------------\n"); // Mantido
                 }
                 else
                 {
