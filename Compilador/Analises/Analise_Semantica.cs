@@ -19,7 +19,10 @@ namespace Compilador.Analises
 
         public void Adicionar(string nome, string tipo, int linha)
         {
-            if (!simbolos.ContainsKey(nome))
+            if (simbolos.ContainsKey(nome))
+            {
+            }
+            else
             {
                 simbolos[nome] = new Simbolo
                 {
@@ -59,6 +62,17 @@ namespace Compilador.Analises
         private Token LookaheadToken => (currentTokenIndex + 1 < tokens.Count) ? tokens[currentTokenIndex + 1] : CurrentToken;
         private void Advance() { if (currentTokenIndex < tokens.Count - 1) currentTokenIndex++; }
 
+        private bool Match(string expectedType)
+        {
+            if (CurrentToken.Type == expectedType)
+            {
+                Advance();
+                return true;
+            }
+            return false;
+        }
+
+
         public void Analisar()
         {
             if (CurrentToken.Type == "t_programa")
@@ -71,13 +85,43 @@ namespace Compilador.Analises
                 else
                 {
                     Erros.Add($"Erro Semântico na linha {CurrentToken.LineNumber}: esperado identificador após 'Program'.");
+                    Advance();
                 }
             }
+            else
+            {
+            }
 
-            while (CurrentToken.Type != "EOF")
+
+            if (CurrentToken.Type == "t_abreBloco")
+            {
+                Advance();
+            }
+            else
+            {
+            }
+
+
+            while (CurrentToken.Type != "t_fechaBloco" && CurrentToken.Type != "EOF")
             {
                 AnalisarComandoOuDeclaracao();
             }
+
+            if (CurrentToken.Type == "t_fechaBloco")
+            {
+                Advance();
+            }
+
+
+            if (CurrentToken.Type != "EOF")
+            {
+                Erros.Add($"Erro Semântico na linha {CurrentToken.LineNumber}: Tokens inesperados após o fim do programa.");
+                while (CurrentToken.Type != "EOF")
+                {
+                    Advance();
+                }
+            }
+
 
             VerificarVariaveisNaoUsadas();
         }
@@ -90,7 +134,16 @@ namespace Compilador.Analises
             }
             else if (CurrentToken.Type == "t_id")
             {
-                AnalisarAtribuicao();
+                if (LookaheadToken.Type == "t_atribuicao")
+                {
+                    AnalisarAtribuicao();
+                }
+                else
+                {
+                    Erros.Add($"Erro Semântico na linha {CurrentToken.LineNumber}: identificador '{CurrentToken.Lexeme}' não inicia uma atribuição válida.");
+                    Advance();
+                }
+
             }
             else if (CurrentToken.Type == "t_if")
             {
@@ -106,26 +159,27 @@ namespace Compilador.Analises
             }
             else if (CurrentToken.Type == "t_else")
             {
-                Advance(); // Consome Else
-                AnalisarBloco();
+                Erros.Add($"Erro Semântico na linha {CurrentToken.LineNumber}: 'else' inesperado sem um 'if' correspondente.");
+                Advance();
             }
-            else
+            else if (CurrentToken.Type != "t_fechaBloco" && CurrentToken.Type != "EOF")
             {
-                Advance(); // Se não for nada disso, ignora
+                Advance();
             }
         }
 
         private void AnalisarComandoIf()
         {
-            Advance(); // Consome 'if'
+            Advance();
             if (CurrentToken.Type == "t_abreParen")
             {
-                Advance(); 
+                Advance();
                 AnalisarExpressaoRelacional();
                 if (CurrentToken.Type == "t_fechaParen")
                 {
                     Advance();
                     AnalisarBloco();
+
                     if (CurrentToken.Type == "t_else")
                     {
                         Advance();
@@ -145,47 +199,89 @@ namespace Compilador.Analises
 
         private void AnalisarExpressaoRelacional()
         {
-            if (CurrentToken.Type == "t_bool")
-            {
-                Advance(); // valor true ou false, direto
-            }
-            else if (CurrentToken.Type == "t_id")
-            {
-                var simbolo = tabelaSimbolos.Buscar(CurrentToken.Lexeme);
-                if (simbolo != null && simbolo.Tipo == "t_boolean")
-                {
-                    simbolo.Usado = true;
-                    Advance(); // variável booleana, aceita
-                }
-                else
-                {
-                    AnalisarExpressao(null);
+            string tipoPrimeiroOperando = null;
+            string tipoSegundoOperando = null;
+            string operadorRelacional = null;
+            int linhaInicioExpressao = CurrentToken.LineNumber; // Para reportar erros na linha correta
 
-                    if (IsOperadorRelacional(CurrentToken.Type))
+            // Analisa o primeiro operando/expressão. Esperamos que retorne seu tipo.
+            tipoPrimeiroOperando = AnalisarExpressao(null); // Passamos null inicialmente porque o tipo esperado geral virá do contexto relacional
+
+            // AGORA, verificamos se DEPOIS do primeiro operando/expressão há um operador relacional.
+            // Se houver, é uma expressão relacional binária (op1 operador op2).
+            if (IsOperadorRelacional(CurrentToken.Type))
+            {
+                operadorRelacional = CurrentToken.Type; // Captura o tipo do operador (ex: t_menor)
+                Advance(); // Consome o operador relacional
+
+                // Analisa o segundo operando/expressão. Esperamos que retorne seu tipo.
+                tipoSegundoOperando = AnalisarExpressao(null); // Passamos null pelo mesmo motivo
+
+                // --- Verificação Crucial de Compatibilidade de Tipos para Operadores Relacionais ---
+                // Só verifica se ambos os operandos foram analisados sem terem sido marcados como ERRO léxico/sintático
+                if (tipoPrimeiroOperando != "ERRO" && tipoSegundoOperando != "ERRO")
+                {
+                    bool compativel = false;
+                    string mensagemDetalheErro = "";
+                    string lexemaOperador = CurrentToken.Lexeme; // Pode não estar correto se Advance() já foi chamado, melhor capturar antes. Ou usar um helper para mapear tipo -> lexema.
+
+                    // Capturar o lexema do operador para a mensagem de erro
+                    string operadorLexemaParaErro = "";
+                    switch (operadorRelacional)
                     {
-                        Advance(); // consome operador
-                        AnalisarExpressao(null);
+                        case "t_igualdade": operadorLexemaParaErro = "=="; break;
+                        case "t_diferenca": operadorLexemaParaErro = "!="; break;
+                        case "t_menor": operadorLexemaParaErro = "<"; break;
+                        case "t_maior": operadorLexemaParaErro = ">"; break;
+                        case "t_menor_igual": operadorLexemaParaErro = "<="; break;
+                        case "t_maior_igual": operadorLexemaParaErro = ">="; break;
+                        default: operadorLexemaParaErro = operadorRelacional; break; 
+                    }
+
+
+                    if (operadorRelacional == "t_igualdade" || operadorRelacional == "t_diferenca")
+                    {
+                        // para == e !=, tipos devem ser os mesmos ou compatíveis (numérico com numérico, booleano com booleano, string com string, char com char)
+                        if (tipoPrimeiroOperando == tipoSegundoOperando)
+                        {
+                            compativel = true;
+                        }
+                        else if (SaoTiposNumericos(tipoPrimeiroOperando) && SaoTiposNumericos(tipoSegundoOperando))
+                        {
+                            compativel = true; // Integer == Float ou Float == Integer é permitido
+                        }
+                        //aq daria par por tipo char se nossa gramatica aceitar e outras coisas
+                        else if (tipoPrimeiroOperando == "t_string" && tipoSegundoOperando == "t_string") compativel = true;
+                        else if (tipoPrimeiroOperando == "t_char" && tipoSegundoOperando == "t_char") compativel = true;
+
+                        if (!compativel)
+                        {
+                            mensagemDetalheErro = $"Tipos incompatíveis '{tipoPrimeiroOperando}' e '{tipoSegundoOperando}' para operador de igualdade/diferença ('{operadorLexemaParaErro}').";
+                        }
                     }
                     else
                     {
-                        Erros.Add($"Erro Semântico na linha {CurrentToken.LineNumber}: esperado operador relacional em expressão condicional.");
+                        if (SaoTiposNumericos(tipoPrimeiroOperando) && SaoTiposNumericos(tipoSegundoOperando))
+                        {
+                            compativel = true;
+                        }
+                        mensagemDetalheErro = $"Tipos não numéricos '{tipoPrimeiroOperando}' e '{tipoSegundoOperando}' para operador relacional ('{operadorLexemaParaErro}'). Ambos devem ser Integer ou Float.";
+                    }
+
+                    if (!compativel)
+                    {
+                        Erros.Add($"Erro Semântico na linha {linhaInicioExpressao}: {mensagemDetalheErro}");
                     }
                 }
             }
             else
             {
-                AnalisarExpressao(null);
-
-                if (IsOperadorRelacional(CurrentToken.Type))
+                if (tipoPrimeiroOperando != "t_boolean" && tipoPrimeiroOperando != "ERRO")
                 {
-                    Advance(); // consome operador
-                    AnalisarExpressao(null);
-                }
-                else
-                {
-                    Erros.Add($"Erro Semântico na linha {CurrentToken.LineNumber}: esperado operador relacional em expressão condicional.");
+                    Erros.Add($"Erro Semântico na linha {linhaInicioExpressao}: Expressão condicional deve resultar em um valor booleano (encontrado '{tipoPrimeiroOperando}').");
                 }
             }
+    
         }
 
 
@@ -196,11 +292,19 @@ namespace Compilador.Analises
                    tipo == "t_menor_igual" || tipo == "t_maior_igual";
         }
 
+        private bool SaoTiposNumericos(string tipo)
+        {
+            return tipo == "t_integer" || tipo == "t_float";
+        }
+
+
+        private bool IsTipo(string tipo) =>
+            tipo == "t_integer" || tipo == "t_float" || tipo == "t_char" || tipo == "t_string" || tipo == "t_boolean";
 
 
         private void AnalisarComandoWhile()
         {
-            Advance(); // Consome 'while'
+            Advance();
             if (CurrentToken.Type == "t_abreParen")
             {
                 Advance();
@@ -226,10 +330,12 @@ namespace Compilador.Analises
             if (CurrentToken.Type == "t_abreBloco")
             {
                 Advance();
+
                 while (CurrentToken.Type != "t_fechaBloco" && CurrentToken.Type != "EOF")
                 {
                     AnalisarComandoOuDeclaracao();
                 }
+
                 if (CurrentToken.Type == "t_fechaBloco")
                 {
                     Advance();
@@ -241,31 +347,58 @@ namespace Compilador.Analises
             }
             else
             {
-                AnalisarComandoOuDeclaracao(); // Um comando simples sem bloco
+                AnalisarComandoOuDeclaracao();
             }
         }
 
 
-        private bool IsTipo(string tipo) =>
-            tipo == "t_integer" || tipo == "t_float" || tipo == "t_char" || tipo == "t_string" || tipo == "t_boolean";
-
         private void AnalisarDeclaracao()
         {
-            string tipo = CurrentToken.Type;
+            string tipoDeclarado = CurrentToken.Type;
             Advance();
 
             while (CurrentToken.Type == "t_id")
             {
                 string nomeVar = CurrentToken.Lexeme;
-                tabelaSimbolos.Adicionar(nomeVar, tipo, CurrentToken.LineNumber);
+                int linhaDeclaracao = CurrentToken.LineNumber;
+
+
+                if (tabelaSimbolos.Buscar(nomeVar) != null)
+                {
+                }
+
+
+                tabelaSimbolos.Adicionar(nomeVar, tipoDeclarado, linhaDeclaracao);
                 Advance();
 
                 if (CurrentToken.Type == "t_atribuicao")
                 {
                     Advance();
-                    AnalisarExpressao(tipo);
-                    var simbolo = tabelaSimbolos.Buscar(nomeVar);
-                    if (simbolo != null) simbolo.Inicializado = true;
+                    string tipoAtribuido = AnalisarExpressao(tipoDeclarado);
+
+                    if (tipoAtribuido != "ERRO")
+                    {
+                        if (!TiposCompativeis(tipoDeclarado, tipoAtribuido))
+                        {
+                            Erros.Add($"Erro Semântico na linha {linhaDeclaracao}: tipo incompatível na inicialização da variável '{nomeVar}' (esperado '{tipoDeclarado}', encontrado '{tipoAtribuido}').");
+                            var simbolo = tabelaSimbolos.Buscar(nomeVar);
+                            if (simbolo != null) simbolo.Inicializado = false;
+                        }
+                        else
+                        {
+                            var simbolo = tabelaSimbolos.Buscar(nomeVar);
+                            if (simbolo != null) simbolo.Inicializado = true;
+                        }
+                    }
+                    else
+                    {
+                        var simbolo = tabelaSimbolos.Buscar(nomeVar);
+                        if (simbolo != null) simbolo.Inicializado = false;
+                    }
+
+                }
+                else
+                {
                 }
 
                 if (CurrentToken.Type == "t_virgula")
@@ -284,38 +417,57 @@ namespace Compilador.Analises
             }
             else
             {
-                Erros.Add($"Erro Semântico na linha {CurrentToken.LineNumber}: esperado ';' após declaração.");
+                Erros.Add($"Erro Semântico na linha {CurrentToken.LineNumber}: esperado ';' após declaração de variável.");
             }
         }
 
         private void AnalisarAtribuicao()
         {
             string nomeVar = CurrentToken.Lexeme;
+            int linhaAtribuicao = CurrentToken.LineNumber;
             var simbolo = tabelaSimbolos.Buscar(nomeVar);
 
             if (simbolo == null)
             {
-                Erros.Add($"Erro Semântico na linha {CurrentToken.LineNumber}: variável '{nomeVar}' não declarada.");
-            }
-            else
-            {
-                simbolo.Usado = true;
+                Erros.Add($"Erro Semântico na linha {linhaAtribuicao}: variável '{nomeVar}' não declarada.");
+                Advance();
+                if (CurrentToken.Type == "t_atribuicao")
+                {
+                    Advance();
+                    AnalisarExpressao(null);
+                }
+                if (CurrentToken.Type == "t_ponto_virgula") Advance();
+                return;
             }
 
-            Advance(); // id
+            simbolo.Usado = true;
+
+            Advance();
 
             if (CurrentToken.Type == "t_atribuicao")
             {
-                Advance(); // '='
-                if (simbolo != null)
+                Advance();
+
+                string tipoAtribuido = AnalisarExpressao(simbolo.Tipo);
+
+                if (tipoAtribuido != "ERRO")
                 {
-                    AnalisarExpressao(simbolo.Tipo);
-                    simbolo.Inicializado = true;
+                    if (!TiposCompativeis(simbolo.Tipo, tipoAtribuido))
+                    {
+                        Erros.Add($"Erro Semântico na linha {linhaAtribuicao}: tipo incompatível na atribuição à variável '{nomeVar}' (esperado '{simbolo.Tipo}', encontrado '{tipoAtribuido}').");
+                    }
+                    else
+                    {
+                        simbolo.Inicializado = true;
+                    }
                 }
                 else
                 {
-                    AnalisarExpressao(null);
                 }
+            }
+            else
+            {
+                Erros.Add($"Erro Semântico na linha {linhaAtribuicao}: esperado '=' após identificador '{nomeVar}' em uma atribuição.");
             }
 
             if (CurrentToken.Type == "t_ponto_virgula")
@@ -324,117 +476,192 @@ namespace Compilador.Analises
             }
             else
             {
-                Erros.Add($"Erro Semântico na linha {CurrentToken.LineNumber}: esperado ';' após atribuição.");
+                Erros.Add($"Erro Semântico na linha {CurrentToken.LineNumber}: esperado ';' após comando de atribuição.");
             }
         }
 
-        private void AnalisarExpressao(string tipoEsperado)
+        private string AnalisarExpressao(string tipoEsperado)
         {
-            AnalisarTermo(tipoEsperado);
+            string tipoExpressao = AnalisarTermo(tipoEsperado);
 
             while (CurrentToken.Type == "t_soma" || CurrentToken.Type == "t_subtracao")
             {
-                Advance(); // consome o operador
-                AnalisarTermo(tipoEsperado);
+                string operador = CurrentToken.Lexeme;
+                Advance();
+                string tipoProximoTermo = AnalisarTermo(tipoEsperado);
+
+                if (tipoExpressao != "ERRO" && tipoProximoTermo != "ERRO")
+                {
+                    if (!SaoTiposNumericos(tipoExpressao) || !SaoTiposNumericos(tipoProximoTermo))
+                    {
+                        Erros.Add($"Erro Semântico na linha {CurrentToken.LineNumber}: operandos de tipo incompatível para operador '{operador}'. Ambos devem ser Integer ou Float.");
+                        tipoExpressao = "ERRO";
+                    }
+                    else
+                    {
+                        if (tipoExpressao == "t_integer" && tipoProximoTermo == "t_integer")
+                        {
+                        }
+                        else
+                        {
+                            tipoExpressao = "t_float";
+                        }
+                    }
+                }
+                else
+                {
+                    tipoExpressao = "ERRO";
+                }
             }
+
+            return tipoExpressao;
         }
 
-        private void AnalisarTermo(string tipoEsperado)
+        private string AnalisarTermo(string tipoEsperado)
         {
-            AnalisarFator(tipoEsperado);
+            string tipoTermo = AnalisarFator(tipoEsperado);
 
             while (CurrentToken.Type == "t_multiplicacao" || CurrentToken.Type == "t_divisao")
             {
-                Advance(); // consome o operador
-                AnalisarFator(tipoEsperado);
+                string operador = CurrentToken.Lexeme;
+                Advance();
+                string tipoProximoFator = AnalisarFator(tipoEsperado);
+
+                if (tipoTermo != "ERRO" && tipoProximoFator != "ERRO")
+                {
+                    if (!SaoTiposNumericos(tipoTermo) || !SaoTiposNumericos(tipoProximoFator))
+                    {
+                        Erros.Add($"Erro Semântico na linha {CurrentToken.LineNumber}: operandos de tipo incompatível para operador '{operador}'. Ambos devem ser Integer ou Float.");
+                        tipoTermo = "ERRO";
+                    }
+                    else
+                    {
+                        if (tipoTermo == "t_integer" && tipoProximoFator == "t_integer")
+                        {
+                        }
+                        else
+                        {
+                            tipoTermo = "t_float";
+                        }
+                    }
+                }
+                else
+                {
+                    tipoTermo = "ERRO";
+                }
             }
+
+            return tipoTermo;
         }
 
-        private void AnalisarFator(string tipoEsperado)
+        private string AnalisarFator(string tipoEsperado)
         {
+            string tipoFator = null;
+
             if (CurrentToken.Type == "t_id")
             {
-                var simbolo = tabelaSimbolos.Buscar(CurrentToken.Lexeme);
+                string nomeVar = CurrentToken.Lexeme;
+                int linhaUso = CurrentToken.LineNumber;
+                var simbolo = tabelaSimbolos.Buscar(nomeVar);
+
                 if (simbolo == null)
                 {
-                    Erros.Add($"Erro Semântico na linha {CurrentToken.LineNumber}: variável '{CurrentToken.Lexeme}' não declarada.");
+                    Erros.Add($"Erro Semântico na linha {linhaUso}: variável '{nomeVar}' não declarada.");
+                    tipoFator = "ERRO";
                 }
                 else
                 {
                     if (!simbolo.Inicializado)
                     {
-                        Erros.Add($"Erro Semântico na linha {CurrentToken.LineNumber}: variável '{CurrentToken.Lexeme}' usada sem inicialização.");
+                        Erros.Add($"Erro Semântico na linha {linhaUso}: variável '{nomeVar}' usada sem inicialização.");
                     }
 
                     simbolo.Usado = true;
+                    tipoFator = simbolo.Tipo;
 
-                    if (tipoEsperado != null && !TiposCompativeis(tipoEsperado, simbolo.Tipo))
+                    if (tipoEsperado != null && !TiposCompativeis(tipoEsperado, tipoFator))
                     {
-                        Erros.Add($"Erro Semântico na linha {CurrentToken.LineNumber}: tipo incompatível em expressão (esperado {tipoEsperado}, encontrado {simbolo.Tipo}).");
+                        Erros.Add($"Erro Semântico na linha {linhaUso}: tipo incompatível em expressão (esperado '{tipoEsperado}', encontrado '{tipoFator}').");
                     }
                 }
                 Advance();
             }
-            else if (CurrentToken.Type.StartsWith("t_numero"))
+            else if (CurrentToken.Type == "t_numero_int")
             {
-                string tipoValor = CurrentToken.Type == "t_numero_int" ? "t_integer" : "t_float";
-
-                if (tipoEsperado != null && !TiposCompativeis(tipoEsperado, tipoValor))
+                tipoFator = "t_integer";
+                if (tipoEsperado != null && !TiposCompativeis(tipoEsperado, tipoFator))
                 {
-                    Erros.Add($"Erro Semântico na linha {CurrentToken.LineNumber}: tipo incompatível em valor numérico (esperado {tipoEsperado}, encontrado {tipoValor}).");
+                    Erros.Add($"Erro Semântico na linha {CurrentToken.LineNumber}: tipo incompatível (esperado '{tipoEsperado}', encontrado '{tipoFator}').");
+                }
+                Advance();
+            }
+            else if (CurrentToken.Type == "t_numero_real")
+            {
+                tipoFator = "t_float";
+                if (tipoEsperado != null && !TiposCompativeis(tipoEsperado, tipoFator))
+                {
+                    Erros.Add($"Erro Semântico na linha {CurrentToken.LineNumber}: tipo incompatível (esperado '{tipoEsperado}', encontrado '{tipoFator}').");
                 }
                 Advance();
             }
             else if (CurrentToken.Type == "t_char_literal")
             {
+                tipoFator = "t_char";
                 if (tipoEsperado != null && tipoEsperado != "t_char")
                 {
-                    Erros.Add($"Erro Semântico na linha {CurrentToken.LineNumber}: tipo incompatível (esperado {tipoEsperado}, encontrado t_char).");
+                    Erros.Add($"Erro Semântico na linha {CurrentToken.LineNumber}: tipo incompatível (esperado '{tipoEsperado}', encontrado '{tipoFator}').");
                 }
                 Advance();
             }
             else if (CurrentToken.Type == "t_string_literal")
             {
+                tipoFator = "t_string";
                 if (tipoEsperado != null && tipoEsperado != "t_string")
                 {
-                    Erros.Add($"Erro Semântico na linha {CurrentToken.LineNumber}: tipo incompatível (esperado {tipoEsperado}, encontrado t_string).");
+                    Erros.Add($"Erro Semântico na linha {CurrentToken.LineNumber}: tipo incompatível (esperado '{tipoEsperado}', encontrado '{tipoFator}').");
                 }
                 Advance();
             }
             else if (CurrentToken.Type == "t_bool")
             {
+                tipoFator = "t_boolean";
                 if (tipoEsperado != null && tipoEsperado != "t_boolean")
                 {
-                    Erros.Add($"Erro Semântico na linha {CurrentToken.LineNumber}: tipo incompatível (esperado {tipoEsperado}, encontrado t_boolean).");
+                    Erros.Add($"Erro Semântico na linha {CurrentToken.LineNumber}: tipo incompatível (esperado '{tipoEsperado}', encontrado '{tipoFator}').");
                 }
                 Advance();
             }
             else if (CurrentToken.Type == "t_abreParen")
             {
                 Advance();
-                AnalisarExpressao(tipoEsperado);
+                tipoFator = AnalisarExpressao(null);
                 if (CurrentToken.Type == "t_fechaParen")
                 {
                     Advance();
                 }
                 else
                 {
-                    Erros.Add($"Erro Semântico na linha {CurrentToken.LineNumber}: esperado ')' para fechar expressão.");
+                    Erros.Add($"Erro Semântico na linha {CurrentToken.LineNumber}: esperado ')' para fechar expressão entre parênteses.");
+                    tipoFator = "ERRO";
                 }
             }
             else
             {
-                Erros.Add($"Erro Semântico na linha {CurrentToken.LineNumber}: expressão inválida.");
+                Erros.Add($"Erro Semântico na linha {CurrentToken.LineNumber}: Token inesperado '{CurrentToken.Lexeme}' no início de um fator.");
                 Advance();
+                tipoFator = "ERRO";
             }
+
+            return tipoFator;
         }
-
-
 
         private bool TiposCompativeis(string esperado, string encontrado)
         {
+            if (esperado == "ERRO" || encontrado == "ERRO") return false;
             if (esperado == encontrado) return true;
+
             if (esperado == "t_float" && encontrado == "t_integer") return true;
+
             return false;
         }
 
