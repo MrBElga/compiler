@@ -202,28 +202,26 @@ namespace Compilador.Analises
             string tipoPrimeiroOperando = null;
             string tipoSegundoOperando = null;
             string operadorRelacional = null;
-            int linhaInicioExpressao = CurrentToken.LineNumber; // Para reportar erros na linha correta
+            int linhaInicioExpressao = CurrentToken.LineNumber; 
 
-            // Analisa o primeiro operando/expressão. Esperamos que retorne seu tipo.
-            tipoPrimeiroOperando = AnalisarExpressao(null); // Passamos null inicialmente porque o tipo esperado geral virá do contexto relacional
+            
+            tipoPrimeiroOperando = AnalisarExpressao(null); 
 
-            // AGORA, verificamos se DEPOIS do primeiro operando/expressão há um operador relacional.
-            // Se houver, é uma expressão relacional binária (op1 operador op2).
             if (IsOperadorRelacional(CurrentToken.Type))
             {
-                operadorRelacional = CurrentToken.Type; // Captura o tipo do operador (ex: t_menor)
-                Advance(); // Consome o operador relacional
+                operadorRelacional = CurrentToken.Type; // Captura o tipo do operador
+                Advance(); 
 
-                // Analisa o segundo operando/expressão. Esperamos que retorne seu tipo.
-                tipoSegundoOperando = AnalisarExpressao(null); // Passamos null pelo mesmo motivo
+                // analisa o segundo operando/expressão.
+                tipoSegundoOperando = AnalisarExpressao(null); // passei null pelo mesmo motivo
 
                 // --- Verificação Crucial de Compatibilidade de Tipos para Operadores Relacionais ---
-                // Só verifica se ambos os operandos foram analisados sem terem sido marcados como ERRO léxico/sintático
+                // só verifica se ambos os operandos foram analisados sem terem sido marcados como ERRO léxico/sintático
                 if (tipoPrimeiroOperando != "ERRO" && tipoSegundoOperando != "ERRO")
                 {
                     bool compativel = false;
                     string mensagemDetalheErro = "";
-                    string lexemaOperador = CurrentToken.Lexeme; // Pode não estar correto se Advance() já foi chamado, melhor capturar antes. Ou usar um helper para mapear tipo -> lexema.
+                    string lexemaOperador = CurrentToken.Lexeme; 
 
                     // Capturar o lexema do operador para a mensagem de erro
                     string operadorLexemaParaErro = "";
@@ -355,65 +353,88 @@ namespace Compilador.Analises
         private void AnalisarDeclaracao()
         {
             string tipoDeclarado = CurrentToken.Type;
-            Advance();
+            Advance(); // Consome o tipo (Integer, Float, etc.)
 
+            // Loop para analisar múltiplos IDs na mesma declaração (ex: Integer a, b = 10;)
             while (CurrentToken.Type == "t_id")
             {
                 string nomeVar = CurrentToken.Lexeme;
                 int linhaDeclaracao = CurrentToken.LineNumber;
 
-
+                // --- Verificação semântica: variável já declarada no escopo atual ---
+                // Busca a variável na tabela de símbolos. Como a tabela é global,
+                // encontrar um símbolo significa que já foi declarado no escopo global.
                 if (tabelaSimbolos.Buscar(nomeVar) != null)
                 {
+                    // Se encontrar um símbolo com o mesmo nome, é um erro de redeclaração.
+                    Erros.Add($"Erro Semântico na linha {linhaDeclaracao}: variável '{nomeVar}' já declarada neste escopo.");
+                    // Não adicionamos à tabela de símbolos novamente. Isso garante que usos posteriores
+                    // deste nome (se houver) se refiram à primeira declaração válida (ou ao erro, dependendo da implementação)
+                    // e evita problemas de ambiguidade interna na tabela.
                 }
+                else
+                {
+                    // Se a variável NÃO está declarada neste escopo, adicione-a à tabela de símbolos.
+                    tabelaSimbolos.Adicionar(nomeVar, tipoDeclarado, linhaDeclaracao);
+                }
+                // --- Fim da adição da verificação ---
 
+                Advance(); // Consome o ID da variável
 
-                tabelaSimbolos.Adicionar(nomeVar, tipoDeclarado, linhaDeclaracao);
-                Advance();
-
+                // Verifica se há inicialização para esta variável específica
                 if (CurrentToken.Type == "t_atribuicao")
                 {
-                    Advance();
-                    string tipoAtribuido = AnalisarExpressao(tipoDeclarado);
+                    Advance(); // Consome '='
+                    // Analisa a expressão de inicialização e verifica compatibilidade de tipo
+                    string tipoAtribuido = AnalisarExpressao(tipoDeclarado); // Passa o tipo esperado
 
+                    // Se a expressão de inicialização não teve erros internos e pudemos determinar seu tipo
                     if (tipoAtribuido != "ERRO")
                     {
+                        // Verifica se o tipo atribuído é compatível com o tipo declarado
                         if (!TiposCompativeis(tipoDeclarado, tipoAtribuido))
                         {
                             Erros.Add($"Erro Semântico na linha {linhaDeclaracao}: tipo incompatível na inicialização da variável '{nomeVar}' (esperado '{tipoDeclarado}', encontrado '{tipoAtribuido}').");
-                            var simbolo = tabelaSimbolos.Buscar(nomeVar);
-                            if (simbolo != null) simbolo.Inicializado = false;
+                            // Embora haja um erro de tipo na inicialização, a variável existe.
+                            // Podemos optar por marcar como não inicializada semanticamente se a inicialização falhou.
+                            var simbolo = tabelaSimbolos.Buscar(nomeVar); // Busca novamente, caso não tenha sido adicionada por ser duplicada
+                            if (simbolo != null) simbolo.Inicializado = false; // Falha na inicialização devido a tipo
                         }
                         else
                         {
-                            var simbolo = tabelaSimbolos.Buscar(nomeVar);
+                            // Inicialização bem-sucedida semanticamente (tipo compatível)
+                            var simbolo = tabelaSimbolos.Buscar(nomeVar); // Busca para marcar como inicializada
                             if (simbolo != null) simbolo.Inicializado = true;
                         }
                     }
                     else
                     {
-                        var simbolo = tabelaSimbolos.Buscar(nomeVar);
-                        if (simbolo != null) simbolo.Inicializado = false;
+                        // A expressão de inicialização continha erros, a variável não é considerada inicializada com sucesso por esta atribuição.
+                        var simbolo = tabelaSimbolos.Buscar(nomeVar); // Busca para marcar status
+                        if (simbolo != null) simbolo.Inicializado = false; // Falha na inicialização devido a erro na expressão
                     }
 
                 }
                 else
                 {
+                    // Variável declarada sem inicialização explícita (Inicializado permanece false por padrão na TabelaSimbolos)
                 }
 
+                // Verifica se há mais IDs na mesma declaração (separados por vírgula)
                 if (CurrentToken.Type == "t_virgula")
                 {
-                    Advance();
+                    Advance(); 
+                    // Continua o loop para o próximo ID
                 }
                 else
                 {
-                    break;
+                    break; // Sai do loop se não houver vírgula
                 }
             }
 
             if (CurrentToken.Type == "t_ponto_virgula")
             {
-                Advance();
+                Advance(); 
             }
             else
             {
