@@ -97,6 +97,7 @@ namespace Compilador
 
             bool hasLexicalErrors = false;
             bool hasSyntaxErrors = false;
+            bool hasSemanticaxErrors = false;
             List<Token> listaTokens = new List<Token>();
 
             string reportPath = Path.Combine(
@@ -212,17 +213,49 @@ namespace Compilador
                     richTextBoxErro.AppendText("------------------------------------------------------\n");
                 }
 
-                if (!hasLexicalErrors && !hasSyntaxErrors)
+                var analiseSemantica = new Analise_Semantica(listaTokens);
+                analiseSemantica.Analisar();
+
+                if (analiseSemantica.Erros.Any())
+                {
+                    hasSemanticaxErrors = true; // Mantido
+                    richTextBoxErro.SelectionColor = Color.Purple; // Mantido
+                    richTextBoxErro.SelectionFont = new Font(richTextBoxErro.Font, FontStyle.Bold); // Mantido
+                    richTextBoxErro.AppendText("❌ Erros Semânticos Encontrados:\n"); // Mantido
+                    foreach (var erroSemantico in analiseSemantica.Erros)
+                    {
+                        richTextBoxErro.AppendText($"  {erroSemantico}\n"); // Mantido
+
+                        // --- Adicionar esta parte ---
+                        // Extrai o número da linha da mensagem de erro semântico
+                        Match match = Regex.Match(erroSemantico, @"(?:linha|Linha)\s+(\d+):");
+                        if (match.Success && int.TryParse(match.Groups[1].Value, out int lineNo))
+                        {
+                            // Chama a função para destacar a linha no editor
+                            HighlightErrorLine(lineNo, Color.FromArgb(90, 128, 0, 128)); // Cor Roxo Semi-Transparente
+                        }
+                        // --- Fim da adição ---
+                    }
+                    richTextBoxErro.AppendText("------------------------------------------------------\n"); // Mantido
+                }
+                else
+                {
+                    richTextBoxErro.SelectionColor = Color.Blue;
+                    richTextBoxErro.SelectionFont = new Font(richTextBoxErro.Font, FontStyle.Bold);
+                    richTextBoxErro.AppendText("✓ Análise Semântica concluída com sucesso!\n");
+                    richTextBoxErro.AppendText("------------------------------------------------------\n");
+                }
+
+                if (!hasLexicalErrors && !hasSyntaxErrors && !hasSemanticaxErrors)
                 {
                     richTextBoxErro.SelectionColor = Color.DodgerBlue;
                     richTextBoxErro.SelectionFont = new Font(richTextBoxErro.Font, FontStyle.Italic);
-                    richTextBoxErro.AppendText("ℹ️ Compilação (Léxica e Sintática) bem-sucedida.\n");
-                    richTextBoxErro.AppendText("   Próximas etapas: Análise Semântica e Geração de Código.\n");
+                    richTextBoxErro.AppendText("ℹ️ Compilação bem-sucedida.\n");
                     richTextBoxErro.AppendText("------------------------------------------------------\n");
                 }
                 else
                 {
-                
+
                     richTextBoxErro.SelectionColor = Color.DarkRed;
                     richTextBoxErro.SelectionFont = new Font(richTextBoxErro.Font, FontStyle.Bold);
                     richTextBoxErro.AppendText("⚠️ Compilação concluída com erros.\n");
