@@ -55,7 +55,9 @@
     <Compile Include="Analises\Analise_Sintatica.cs" />
     <Compile Include="Analises\Automato.cs" />
     <Compile Include="Analises\GeradorCodigoIntermediario.cs" />
+    <Compile Include="Analises\OtimizadorCodigo.cs" />
     <Compile Include="Analises\RelatorioCodigoIntermediario.cs" />
+    <Compile Include="Analises\RelatorioCodigoOtimizado.cs" />
     <Compile Include="Analises\Token.cs" />
     <Compile Include="Form1.cs">
       <SubType>Form</SubType>

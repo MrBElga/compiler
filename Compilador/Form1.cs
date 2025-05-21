@@ -264,6 +264,18 @@ namespace Compilador
                     richTextBoxErro.SelectionFont = new Font(richTextBoxErro.Font, FontStyle.Bold);
                     richTextBoxErro.AppendText("✓ Código Intermediário gerado com sucesso!\n");
                     richTextBoxErro.AppendText("------------------------------------------------------\n");
+                    // --- Otimização de Código ---
+                    List<string> codigoOtimizado = OtimizadorCodigo.Otimizar(codigoIntermediario);
+
+                    // Gera relatório otimizado
+                    RelatorioCodigoOtimizado.Gerar(codigoOtimizado, currentFilePath);
+
+                    // Mensagem no painel de saída
+                    richTextBoxErro.SelectionColor = Color.Teal;
+                    richTextBoxErro.SelectionFont = new Font(richTextBoxErro.Font, FontStyle.Bold);
+                    richTextBoxErro.AppendText("✓ Código Otimizado gerado com sucesso!\n");
+                    richTextBoxErro.AppendText("------------------------------------------------------\n");
+
 
                 }
                 else
