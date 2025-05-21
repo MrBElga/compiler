@@ -252,6 +252,19 @@ namespace Compilador
                     richTextBoxErro.SelectionFont = new Font(richTextBoxErro.Font, FontStyle.Italic);
                     richTextBoxErro.AppendText("ℹ️ Compilação bem-sucedida.\n");
                     richTextBoxErro.AppendText("------------------------------------------------------\n");
+                    // --- Geração de Código Intermediário ---
+                    var gerador = new GeradorCodigoIntermediario(listaTokens);
+                    List<string> codigoIntermediario = gerador.Gerar();
+
+                    // Gera e salva o relatório de código intermediário
+                    RelatorioCodigoIntermediario.Gerar(codigoIntermediario, currentFilePath);
+
+                    // Exibe mensagem na tela
+                    richTextBoxErro.SelectionColor = Color.DarkCyan;
+                    richTextBoxErro.SelectionFont = new Font(richTextBoxErro.Font, FontStyle.Bold);
+                    richTextBoxErro.AppendText("✓ Código Intermediário gerado com sucesso!\n");
+                    richTextBoxErro.AppendText("------------------------------------------------------\n");
+
                 }
                 else
                 {
