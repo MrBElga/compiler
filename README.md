@@ -3,32 +3,60 @@
 ![Build](https://img.shields.io/badge/Build-MSBuild-lightgrey.svg)
 ![Status](https://img.shields.io/badge/Status-Academic%20Project-orange.svg)
 ![License](https://img.shields.io/badge/License-MIT-yellow.svg)
-# Compilador Didático - Análise Léxica e Sintática
+
+# Compilador Didático Completo em C#
 
 ## 🚀 Sobre o Projeto
 
-Este repositório abriga um compilador desenvolvido como parte da disciplina de **Compiladores**. O foco principal está na implementação das fases de **análise léxica** e **análise sintática**, utilizando uma abordagem **preditiva descendente (recursiva ou com pilha)**.
+Este repositório abriga um compilador didático desenvolvido como parte da disciplina de **Compiladores**. O projeto implementa todas as fases clássicas de um compilador, desde a análise léxica do código fonte até a geração de código de máquina para um simulador (SimpSIM).
 
-O objetivo é fornecer uma ferramenta didática que demonstre os conceitos fundamentais da construção de compiladores.
+O objetivo é fornecer uma ferramenta educacional que demonstre de forma prática os conceitos fundamentais e os processos envolvidos na construção de compiladores.
 
 ## ✨ Funcionalidades Implementadas
 
 * **Análise Léxica:**
-    * Reconhecimento e classificação de tokens (palavras-chave, identificadores, operadores, literais, etc.).
-    * Geração de relatório detalhado da análise léxica em arquivo `.txt`
+    * Reconhecimento e classificação de tokens (palavras-chave, identificadores, operadores, números inteiros e reais, literais de char e string, booleanos).
+    * Geração de relatório detalhado da análise léxica em arquivo `.txt`.
 * **Análise Sintática:**
-    * Implementação de um analisador sintático preditivo descendente (LL(1)).
+    * Implementação de um analisador sintático preditivo descendente LL(1).
     * Validação da estrutura gramatical do código-fonte.
     * Identificação precisa de erros sintáticos, indicando a linha e a natureza do erro.
-    * Fornecimento de mensagens de erro claras para auxiliar na correção.
+    * Mecanismos de recuperação de erro (sincronização).
+* **Análise Semântica:**
+    * Construção e gerenciamento de Tabela de Símbolos para controle de escopo e declarações.
+    * Verificação de tipos em atribuições e expressões.
+    * Detecção de erros como variáveis não declaradas, dupla declaração, tipos incompatíveis e uso de variáveis não inicializadas.
+    * Avisos para variáveis declaradas, mas não utilizadas.
+* **Geração de Código Intermediário:**
+    * Produção de código de três endereços (ou similar) com uso de variáveis temporárias e rótulos.
+    * Tradução de atribuições, expressões aritméticas e estruturas de controle (`If`, `While`).
+    * Geração de relatório do código intermediário em arquivo `.txt`.
+* **Otimização de Código Intermediário:**
+    * Implementação de diversas técnicas de otimização, incluindo:
+        * Remoção de Atribuições de Identidade (`x = x`).
+        * Remoção de Atribuições Inúteis (Dead Code Elimination).
+        * Propagação de Constantes.
+        * Cálculo de Constantes (Constant Folding).
+        * Eliminação de Subexpressões Comuns (local).
+        * Remoção de Saltos Inúteis.
+        * Simplificação Aritmética Trivial (`x+0`, `y*1`, etc.).
+        * Propagação de Cópias.
+    * Geração de relatório do código otimizado em arquivo `.txt`.
+* **Geração de Código de Máquina (Simulador SimpSIM):**
+    * Tradução do código intermediário otimizado para a linguagem de montagem do SimpSIM.
+    * Mapeamento de variáveis para posições de memória.
+    * Geração de instruções para operações aritméticas básicas (`+`, `-`, `*`, `/`).
+    * Geração de instruções para operações relacionais e saltos condicionais (`ifFalse`).
+    * Implementação das estruturas de controle `If/Else` e `While`.
+    * Geração de declarações de variáveis e instrução `HALT`.
 * **Interface Gráfica (Windows Forms):**
-    * Editor de código com numeração de linhas.
-    * Painel para exibição de erros léxicos e sintáticos.
-    * Funcionalidades básicas de manipulação de arquivos (Novo, Abrir, Salvar).
-    * Botão para iniciar o processo de compilação (análise).
-    * Destaque visual das linhas com erros no editor.
+    * Editor de código com numeração de linhas e destaque de sintaxe básico.
+    * Painel para exibição de mensagens de erro das diversas fases da compilação.
+    * Funcionalidades de manipulação de arquivos (Novo, Abrir, Salvar).
+    * Botão para iniciar o processo completo de compilação.
+    * Destaque visual das linhas com erros léxicos, sintáticos e semânticos no editor.
+    * Navegação para a linha do erro com duplo clique na mensagem de erro.
 
----
 
 ## 📜 Gramática e Linguagem
 
@@ -132,11 +160,15 @@ A implementação da análise semântica adicionará uma camada mais profunda de
 compiler/
 │
 ├── Compilador/                  # Projeto principal do Compilador (Windows Forms App)
-│   ├── Analises/               # Classes responsáveis pelas análises
-│   │   ├── Analise_Lexica.cs   #
-│   │   ├── Analise_Sintatica.cs#
-│   │   ├── Automato.cs         #
-│   │   └── Token.cs            #
+│   ├── Analises/
+│   │   ├── Analise_Lexica.cs
+│   │   ├── Analise_Sintatica.cs
+│   │   ├── Analise_Semantica.cs
+│   │   ├── GeradorCodigoIntermediario.cs
+│   │   ├── OtimizadorCodigo.cs
+│   │   ├── GeradorCodigoSimpSIM.cs
+│   │   ├── Automato.cs
+│   │   └── Token.cs
 │   │
 │   ├── Properties/             # Arquivos de configuração do projeto
 │   │   ├── AssemblyInfo.cs     #
