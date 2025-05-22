@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
+﻿using System.Collections.Generic;
 
 namespace Compilador.Analises
 {
@@ -161,9 +158,8 @@ namespace Compilador.Analises
                 return temp;
             }
 
-            return ladoEsquerdo; // se não for relacional, trata como expressão simples (e.g., booleano)
+            return ladoEsquerdo;
         }
-
 
         private string Termo()
         {
@@ -180,7 +176,6 @@ namespace Compilador.Analises
             return fator1;
         }
 
-        // Em GeradorCodigoIntermediario.cs, dentro de Fator()
         private string Fator()
         {
             if (Match("t_id") || Match("t_numero_int") || Match("t_numero_real"))
@@ -206,17 +201,22 @@ namespace Compilador.Analises
                 return expr;
             }
 
-            erros.Add($"Fator inesperado: {Current().Lexeme} na linha {Current().LineNumber}"); // Corrigido para usar "erros"
+            erros.Add($"Fator inesperado: {Current().Lexeme} na linha {Current().LineNumber}");
             Avancar();
             return "ERRO_FATOR";
         }
 
         private string NovoTemp() => $"t{tempCount++}";
+
         private string NovoRotulo() => $"L{tempCount++}";
 
         private Token Current() => tokens[index];
+
         private Token Lookahead() => (index + 1 < tokens.Count) ? tokens[index + 1] : tokens[index];
+
         private bool Match(string tipo) => Current().Type == tipo;
-        private void Avancar() { if (index < tokens.Count - 1) index++; }
+
+        private void Avancar()
+        { if (index < tokens.Count - 1) index++; }
     }
 }

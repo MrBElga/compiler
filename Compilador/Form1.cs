@@ -32,11 +32,22 @@ namespace Compilador
         }
 
         #region Arquivo Operations
-        private void novoToolStripButton_Click(object sender, EventArgs e) { ClearEditor(); }
-        private void abrirToolStripButton_Click(object sender, EventArgs e) { if (openFileDialog1.ShowDialog() == DialogResult.OK) { OpenFile(openFileDialog1.FileName); } }
-        private void salvarToolStripButton_Click(object sender, EventArgs e) { SaveFile(); }
-        private void ClearEditor() { richTextBox1.Clear(); richTextBoxErro.Clear(); currentFilePath = string.Empty; lbNomeProjeto.Text = "Novo Projeto"; richTextBox1.Focus(); }
-        private void OpenFile(string filePath) { try { richTextBox1.Text = File.ReadAllText(filePath); currentFilePath = filePath; lbNomeProjeto.Text = Path.GetFileName(filePath); richTextBoxErro.Clear(); ResetEditorHighlight(); } catch (Exception ex) { ShowError("Erro ao abrir arquivo", ex.Message); } }
+
+        private void abrirToolStripButton_Click(object sender, EventArgs e)
+        { if (openFileDialog1.ShowDialog() == DialogResult.OK) { OpenFile(openFileDialog1.FileName); } }
+
+        private void ClearEditor()
+        { richTextBox1.Clear(); richTextBoxErro.Clear(); currentFilePath = string.Empty; lbNomeProjeto.Text = "Novo Projeto"; richTextBox1.Focus(); }
+
+        private void novoToolStripButton_Click(object sender, EventArgs e)
+        { ClearEditor(); }
+
+        private void OpenFile(string filePath)
+        { try { richTextBox1.Text = File.ReadAllText(filePath); currentFilePath = filePath; lbNomeProjeto.Text = Path.GetFileName(filePath); richTextBoxErro.Clear(); ResetEditorHighlight(); } catch (Exception ex) { ShowError("Erro ao abrir arquivo", ex.Message); } }
+
+        private void salvarToolStripButton_Click(object sender, EventArgs e)
+        { SaveFile(); }
+
         private void SaveFile()
         {
             try
@@ -65,17 +76,30 @@ namespace Compilador
                 currentFilePath = string.Empty;
             }
         }
-        #endregion
+
+        #endregion Arquivo Operations
 
         #region Text Formatting
-        private void ToggleFontStyle(FontStyle style) { var currentFont = richTextBox1.SelectionFont ?? richTextBox1.Font; var newStyle = currentFont.Style ^ style; richTextBox1.SelectionFont = new Font(currentFont.FontFamily, currentFont.Size, newStyle); }
-        private void btnNegrito_Click(object sender, EventArgs e) { ToggleFontStyle(FontStyle.Bold); }
-        private void btnItalico_Click(object sender, EventArgs e) { ToggleFontStyle(FontStyle.Italic); }
-        private void btnSublinhar_Click(object sender, EventArgs e) { ToggleFontStyle(FontStyle.Underline); }
-        private void btnLimparTudo_Click(object sender, EventArgs e) { ClearEditor(); ResetEditorHighlight(); }
-        #endregion
+
+        private void btnItalico_Click(object sender, EventArgs e)
+        { ToggleFontStyle(FontStyle.Italic); }
+
+        private void btnLimparTudo_Click(object sender, EventArgs e)
+        { ClearEditor(); ResetEditorHighlight(); }
+
+        private void btnNegrito_Click(object sender, EventArgs e)
+        { ToggleFontStyle(FontStyle.Bold); }
+
+        private void btnSublinhar_Click(object sender, EventArgs e)
+        { ToggleFontStyle(FontStyle.Underline); }
+
+        private void ToggleFontStyle(FontStyle style)
+        { var currentFont = richTextBox1.SelectionFont ?? richTextBox1.Font; var newStyle = currentFont.Style ^ style; richTextBox1.SelectionFont = new Font(currentFont.FontFamily, currentFont.Size, newStyle); }
+
+        #endregion Text Formatting
 
         #region Compiler
+
         private void btnCompilar_Click(object sender, EventArgs e)
         {
             if (!string.IsNullOrEmpty(currentFilePath))
@@ -182,8 +206,7 @@ namespace Compilador
                         richTextBoxErro.AppendText($"* Relatório de Análise Léxica Gerado em: {reportPath}\n");
                     }
                     richTextBoxErro.AppendText("------------------------------------------------------\n");
-
-                } 
+                }
                 var analiseSintatica = new AnaliseSintatica(listaTokens);
                 analiseSintatica.Parse();
 
@@ -294,12 +317,10 @@ namespace Compilador
                 }
                 else
                 {
-
                     richTextBoxErro.SelectionColor = Color.DarkRed;
                     richTextBoxErro.SelectionFont = new Font(richTextBoxErro.Font, FontStyle.Bold);
                     richTextBoxErro.AppendText("⚠️ Compilação concluída com erros.\n");
                 }
-
             }
             catch (IOException ioEx)
             {
@@ -307,7 +328,7 @@ namespace Compilador
                 richTextBoxErro.SelectionColor = Color.Magenta;
                 richTextBoxErro.SelectionFont = new Font(richTextBoxErro.Font, FontStyle.Bold);
                 richTextBoxErro.AppendText($"💥 Erro de Arquivo: {ioEx.Message}\n");
-                hasLexicalErrors = true; 
+                hasLexicalErrors = true;
             }
             catch (Exception ex)
             {
@@ -315,7 +336,7 @@ namespace Compilador
                 richTextBoxErro.SelectionColor = Color.Magenta;
                 richTextBoxErro.SelectionFont = new Font(richTextBoxErro.Font, FontStyle.Bold);
                 richTextBoxErro.AppendText($"💥 Erro Fatal Inesperado: {ex.Message}\n");
-                
+
                 hasLexicalErrors = true;
                 hasSyntaxErrors = true;
             }
@@ -331,6 +352,20 @@ namespace Compilador
         {
             var match = Regex.Match(errorMessage, @"\'([^\']+)\'");
             return match.Success ? match.Groups[1].Value : "[?] ";
+        }
+
+        private void GoToEditorLine(int lineNumber)
+        {
+            if (lineNumber >= 0 && lineNumber < richTextBox1.Lines.Length)
+            {
+                richTextBox1.Focus();
+                int start = richTextBox1.GetFirstCharIndexFromLine(lineNumber);
+                if (start >= 0)
+                {
+                    richTextBox1.Select(start, 0);
+                    richTextBox1.ScrollToCaret();
+                }
+            }
         }
 
         private void HighlightErrorLine(int lineNumber, Color highlightColor)
@@ -350,6 +385,17 @@ namespace Compilador
             {
                 System.Diagnostics.Debug.WriteLine($"Tentativa de realçar linha inválida: {lineNumber}");
             }
+        }
+
+        private void ResetEditorHighlight()
+        {
+            int selectionStart = richTextBox1.SelectionStart;
+            int selectionLength = richTextBox1.SelectionLength;
+            richTextBox1.SelectAll();
+            richTextBox1.SelectionBackColor = richTextBox1.BackColor;
+            richTextBox1.SelectionColor = richTextBox1.ForeColor;
+            richTextBox1.DeselectAll();
+            richTextBox1.Select(selectionStart, selectionLength);
         }
 
         private void RichTextBoxErro_DoubleClick(object sender, EventArgs e)
@@ -373,37 +419,15 @@ namespace Compilador
             }
         }
 
-        private void GoToEditorLine(int lineNumber)
-        {
-            if (lineNumber >= 0 && lineNumber < richTextBox1.Lines.Length)
-            {
-                richTextBox1.Focus();
-                int start = richTextBox1.GetFirstCharIndexFromLine(lineNumber);
-                if (start >= 0)
-                {
-                    richTextBox1.Select(start, 0);
-                    richTextBox1.ScrollToCaret();
-                }
-            }
-        }
-
-        private void ResetEditorHighlight()
-        {
-            int selectionStart = richTextBox1.SelectionStart;
-            int selectionLength = richTextBox1.SelectionLength;
-            richTextBox1.SelectAll();
-            richTextBox1.SelectionBackColor = richTextBox1.BackColor;
-            richTextBox1.SelectionColor = richTextBox1.ForeColor;
-            richTextBox1.DeselectAll();
-            richTextBox1.Select(selectionStart, selectionLength);
-        }
-        #endregion
+        #endregion Compiler
 
         #region Helpers
+
         private void ShowError(string title, string message)
         {
             MessageBox.Show($"Erro: {message}", title, MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
-        #endregion
+
+        #endregion Helpers
     }
 }

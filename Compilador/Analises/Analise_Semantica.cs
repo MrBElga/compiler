@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Collections.Generic;
 
 namespace Compilador.Analises
 {
@@ -60,7 +58,9 @@ namespace Compilador.Analises
 
         private Token CurrentToken => tokens[currentTokenIndex];
         private Token LookaheadToken => (currentTokenIndex + 1 < tokens.Count) ? tokens[currentTokenIndex + 1] : CurrentToken;
-        private void Advance() { if (currentTokenIndex < tokens.Count - 1) currentTokenIndex++; }
+
+        private void Advance()
+        { if (currentTokenIndex < tokens.Count - 1) currentTokenIndex++; }
 
         private bool Match(string expectedType)
         {
@@ -71,7 +71,6 @@ namespace Compilador.Analises
             }
             return false;
         }
-
 
         public void Analisar()
         {
@@ -92,7 +91,6 @@ namespace Compilador.Analises
             {
             }
 
-
             if (CurrentToken.Type == "t_abreBloco")
             {
                 Advance();
@@ -100,7 +98,6 @@ namespace Compilador.Analises
             else
             {
             }
-
 
             while (CurrentToken.Type != "t_fechaBloco" && CurrentToken.Type != "EOF")
             {
@@ -112,7 +109,6 @@ namespace Compilador.Analises
                 Advance();
             }
 
-
             if (CurrentToken.Type != "EOF")
             {
                 Erros.Add($"Erro Semântico na linha {CurrentToken.LineNumber}: Tokens inesperados após o fim do programa.");
@@ -121,7 +117,6 @@ namespace Compilador.Analises
                     Advance();
                 }
             }
-
 
             VerificarVariaveisNaoUsadas();
         }
@@ -143,7 +138,6 @@ namespace Compilador.Analises
                     Erros.Add($"Erro Semântico na linha {CurrentToken.LineNumber}: identificador '{CurrentToken.Lexeme}' não inicia uma atribuição válida.");
                     Advance();
                 }
-
             }
             else if (CurrentToken.Type == "t_if")
             {
@@ -202,15 +196,14 @@ namespace Compilador.Analises
             string tipoPrimeiroOperando = null;
             string tipoSegundoOperando = null;
             string operadorRelacional = null;
-            int linhaInicioExpressao = CurrentToken.LineNumber; 
+            int linhaInicioExpressao = CurrentToken.LineNumber;
 
-            
-            tipoPrimeiroOperando = AnalisarExpressao(null); 
+            tipoPrimeiroOperando = AnalisarExpressao(null);
 
             if (IsOperadorRelacional(CurrentToken.Type))
             {
                 operadorRelacional = CurrentToken.Type; // Captura o tipo do operador
-                Advance(); 
+                Advance();
 
                 // analisa o segundo operando/expressão.
                 tipoSegundoOperando = AnalisarExpressao(null); // passei null pelo mesmo motivo
@@ -221,7 +214,7 @@ namespace Compilador.Analises
                 {
                     bool compativel = false;
                     string mensagemDetalheErro = "";
-                    string lexemaOperador = CurrentToken.Lexeme; 
+                    string lexemaOperador = CurrentToken.Lexeme;
 
                     // Capturar o lexema do operador para a mensagem de erro
                     string operadorLexemaParaErro = "";
@@ -233,9 +226,8 @@ namespace Compilador.Analises
                         case "t_maior": operadorLexemaParaErro = ">"; break;
                         case "t_menor_igual": operadorLexemaParaErro = "<="; break;
                         case "t_maior_igual": operadorLexemaParaErro = ">="; break;
-                        default: operadorLexemaParaErro = operadorRelacional; break; 
+                        default: operadorLexemaParaErro = operadorRelacional; break;
                     }
-
 
                     if (operadorRelacional == "t_igualdade" || operadorRelacional == "t_diferenca")
                     {
@@ -279,9 +271,7 @@ namespace Compilador.Analises
                     Erros.Add($"Erro Semântico na linha {linhaInicioExpressao}: Expressão condicional deve resultar em um valor booleano (encontrado '{tipoPrimeiroOperando}').");
                 }
             }
-    
         }
-
 
         private bool IsOperadorRelacional(string tipo)
         {
@@ -295,10 +285,8 @@ namespace Compilador.Analises
             return tipo == "t_integer" || tipo == "t_float";
         }
 
-
         private bool IsTipo(string tipo) =>
             tipo == "t_integer" || tipo == "t_float" || tipo == "t_char" || tipo == "t_string" || tipo == "t_boolean";
-
 
         private void AnalisarComandoWhile()
         {
@@ -349,7 +337,6 @@ namespace Compilador.Analises
             }
         }
 
-
         private void AnalisarDeclaracao()
         {
             string tipoDeclarado = CurrentToken.Type;
@@ -364,7 +351,7 @@ namespace Compilador.Analises
                 // encontrar um símbolo significa que já foi declarado no escopo global.
                 if (tabelaSimbolos.Buscar(nomeVar) != null)
                 {
-                   Erros.Add($"Erro Semântico na linha {linhaDeclaracao}: variável '{nomeVar}' já declarada neste escopo.");
+                    Erros.Add($"Erro Semântico na linha {linhaDeclaracao}: variável '{nomeVar}' já declarada neste escopo.");
                 }
                 else
                 {
@@ -372,12 +359,12 @@ namespace Compilador.Analises
                 }
                 // --- Fim da adição da verificação ---
 
-                Advance(); 
+                Advance();
                 if (CurrentToken.Type == "t_atribuicao")
                 {
-                    Advance(); 
+                    Advance();
                     // Analisa a expressão de inicialização e verifica compatibilidade de tipo
-                    string tipoAtribuido = AnalisarExpressao(tipoDeclarado); 
+                    string tipoAtribuido = AnalisarExpressao(tipoDeclarado);
 
                     // Se a expressão de inicialização não teve erros internos e pudemos determinar seu tipo
                     if (tipoAtribuido != "ERRO")
@@ -387,7 +374,7 @@ namespace Compilador.Analises
                         {
                             Erros.Add($"Erro Semântico na linha {linhaDeclaracao}: tipo incompatível na inicialização da variável '{nomeVar}' (esperado '{tipoDeclarado}', encontrado '{tipoAtribuido}').");
                             var simbolo = tabelaSimbolos.Buscar(nomeVar); // Busca novamente, caso não tenha sido adicionada por ser duplicada
-                            if (simbolo != null) simbolo.Inicializado = false; 
+                            if (simbolo != null) simbolo.Inicializado = false;
                         }
                         else
                         {
@@ -401,18 +388,16 @@ namespace Compilador.Analises
                         var simbolo = tabelaSimbolos.Buscar(nomeVar);
                         if (simbolo != null) simbolo.Inicializado = false;
                     }
-
                 }
                 else
                 {
                     // Variável declarada sem inicialização explícita (Inicializado permanece false por padrão na TabelaSimbolos)
-
                 }
 
                 // Verifica se há mais IDs na mesma declaração (separados por vírgula)
                 if (CurrentToken.Type == "t_virgula")
                 {
-                    Advance(); 
+                    Advance();
                     // Continua o loop para o próximo ID
                 }
                 else
@@ -423,7 +408,7 @@ namespace Compilador.Analises
 
             if (CurrentToken.Type == "t_ponto_virgula")
             {
-                Advance(); 
+                Advance();
             }
             else
             {

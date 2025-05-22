@@ -10,7 +10,7 @@ namespace Compilador.Analises
         private readonly List<string> codigoIntermediarioOtimizado;
         private List<string> codigoSimpSIM;
         private HashSet<string> variaveisDeclaradas;
-        private int tempLabelCount = 0; 
+        private int tempLabelCount = 0;
 
         public GeradorCodigoSimpSIM(List<string> codigoOtimizado)
         {
@@ -19,7 +19,7 @@ namespace Compilador.Analises
             this.variaveisDeclaradas = new HashSet<string>();
         }
 
-        private string NovoRotuloSimpSIM() => $"LL{tempLabelCount++}"; 
+        private string NovoRotuloSimpSIM() => $"LL{tempLabelCount++}";
 
         private string RegistrarVariavel(string nomeVar)
         {
@@ -37,7 +37,6 @@ namespace Compilador.Analises
             return nomeVar;
         }
 
-
         public List<string> Gerar()
         {
             codigoSimpSIM.Clear();
@@ -47,21 +46,21 @@ namespace Compilador.Analises
             foreach (string linhaCIOriginal in codigoIntermediarioOtimizado)
             {
                 string linhaCI = linhaCIOriginal.Trim();
-                if (linhaCI.StartsWith("// REMOVIDO")) continue; 
+                if (linhaCI.StartsWith("// REMOVIDO")) continue;
 
                 string[] partes = linhaCI.Split(new[] { ' ', '\t' }, StringSplitOptions.RemoveEmptyEntries);
                 if (partes.Length == 0) continue;
 
                 if (partes.Length >= 3 && partes[1] == "=")
                 {
-                    RegistrarVariavel(partes[0]); 
-                    if (partes.Length == 3) 
+                    RegistrarVariavel(partes[0]);
+                    if (partes.Length == 3)
                     {
-                        RegistrarVariavel(partes[2]); 
+                        RegistrarVariavel(partes[2]);
                     }
-                    else if (partes.Length == 5) 
+                    else if (partes.Length == 5)
                     {
-                        RegistrarVariavel(partes[2]); 
+                        RegistrarVariavel(partes[2]);
                         RegistrarVariavel(partes[4]);
                     }
                 }
@@ -70,7 +69,6 @@ namespace Compilador.Analises
                     RegistrarVariavel(partes[1]);
                 }
             }
-
 
             foreach (string linhaCIOriginal in codigoIntermediarioOtimizado)
             {
@@ -94,10 +92,6 @@ namespace Compilador.Analises
                 }
             }
 
-            // Adicionar constantes numéricas usadas com ADDI, SUBI, etc., se o SimpSIM não as suportar diretamente
-            // e precisarem ser carregadas da memória. Esta parte é mais complexa e depende
-            // de como você lida com constantes nas operações (ver TraduzirLinha).
-
             return codigoSimpSIM;
         }
 
@@ -118,20 +112,19 @@ namespace Compilador.Analises
             }
             else if (partes.Length == 3 && partes[1] == "=")
             {
-                string dest = partes[0]; // RegistrarVariavel já foi chamado na passada inicial
+                string dest = partes[0];
                 string fonte = partes[2];
 
-                if (decimal.TryParse(fonte, out _)) // x = constante
+                if (decimal.TryParse(fonte, out _))
                 {
                     codigoSimpSIM.Add("LOADI " + fonte);
                 }
-                else // x = y (variável)
+                else
                 {
                     codigoSimpSIM.Add("LOAD " + fonte);
                 }
                 codigoSimpSIM.Add("STORE " + dest);
             }
-            // Operação Aritmética: x = y op z
             else if (partes.Length == 5 && partes[1] == "=" && (partes[3] == "+" || partes[3] == "-" || partes[3] == "*" || partes[3] == "/"))
             {
                 string dest = partes[0];
@@ -139,7 +132,6 @@ namespace Compilador.Analises
                 string operador = partes[3];
                 string op2 = partes[4];
 
-                // LOAD op1
                 if (decimal.TryParse(op1, out _)) codigoSimpSIM.Add("LOADI " + op1);
                 else codigoSimpSIM.Add("LOAD " + op1);
 
@@ -218,25 +210,31 @@ namespace Compilador.Analises
                                 codigoSimpSIM.Add("JPOS " + labelDestino);
                                 codigoSimpSIM.Add("JZERO " + labelDestino);
                                 break;
+
                             case "<=":
                                 codigoSimpSIM.Add("JPOS " + labelDestino);
                                 break;
+
                             case ">":
                                 codigoSimpSIM.Add("JNEG " + labelDestino);
                                 codigoSimpSIM.Add("JZERO " + labelDestino);
                                 break;
+
                             case ">=":
                                 codigoSimpSIM.Add("JNEG " + labelDestino);
                                 break;
+
                             case "==":
                                 string skipLabelTrueEq = NovoRotuloSimpSIM();
                                 codigoSimpSIM.Add("JZERO " + skipLabelTrueEq);
                                 codigoSimpSIM.Add("JUMP " + labelDestino);
                                 codigoSimpSIM.Add(skipLabelTrueEq + ":");
                                 break;
+
                             case "!=":
                                 codigoSimpSIM.Add("JZERO " + labelDestino);
                                 break;
+
                             default:
                                 codigoSimpSIM.Add("; ERRO SimpSIM: Operador relacional desconhecido '" + relOp + "' na definicao de " + varCondicional);
                                 break;
@@ -259,7 +257,74 @@ namespace Compilador.Analises
                     codigoSimpSIM.Add("JZERO " + labelDestino);
                 }
             }
+            else if (partes.Length == 5 && partes[1] == "=" && (partes[3] == "<" || partes[3] == "<=" || partes[3] == ">" || partes[3] == ">=" || partes[3] == "==" || partes[3] == "!="))
+            {
+                string dest = RegistrarVariavel(partes[0]);
+                string opA_str = partes[2];
+                string relOp = partes[3];
+                string opB_str = partes[4];
 
+                if (decimal.TryParse(opA_str, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out _))
+                    codigoSimpSIM.Add("LOADI " + opA_str);
+                else
+                    codigoSimpSIM.Add("LOAD " + RegistrarVariavel(opA_str));
+
+                if (decimal.TryParse(opB_str, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out _))
+                    codigoSimpSIM.Add("SUBI " + opB_str);
+                else
+                    codigoSimpSIM.Add("SUB " + RegistrarVariavel(opB_str));
+
+                string labelSetTrue = NovoRotuloSimpSIM();
+                string labelCondFim = NovoRotuloSimpSIM();
+
+                switch (relOp)
+                {
+                    case "<":
+                        codigoSimpSIM.Add("JNEG " + labelSetTrue);
+                        break;
+
+                    case "<=":
+                        codigoSimpSIM.Add("JNEG " + labelSetTrue);
+                        codigoSimpSIM.Add("JZERO " + labelSetTrue);
+                        break;
+
+                    case ">":
+                        codigoSimpSIM.Add("JPOS " + labelSetTrue);
+                        break;
+
+                    case ">=":
+                        codigoSimpSIM.Add("JPOS " + labelSetTrue);
+                        codigoSimpSIM.Add("JZERO " + labelSetTrue);
+                        break;
+
+                    case "==":
+                        codigoSimpSIM.Add("JZERO " + labelSetTrue);
+                        break;
+
+                    case "!=":
+                        codigoSimpSIM.Add("JPOS " + labelSetTrue);
+                        codigoSimpSIM.Add("JNEG " + labelSetTrue);
+                        break;
+
+                    default:
+                        codigoSimpSIM.Add("; ERRO SimpSIM: Operador relacional desconhecido '" + relOp + "' na atribuicao para " + dest);
+                        codigoSimpSIM.Add(labelSetTrue + ":");
+                        codigoSimpSIM.Add(labelCondFim + ":");
+                        codigoSimpSIM.Add("LOADI 0 ; Valor de erro para " + dest);
+                        codigoSimpSIM.Add("STORE " + dest);
+                        return;
+                }
+
+                codigoSimpSIM.Add("LOADI 0       ; Condicao FALSA");
+                codigoSimpSIM.Add("STORE " + dest);
+                codigoSimpSIM.Add("JUMP " + labelCondFim);
+
+                codigoSimpSIM.Add(labelSetTrue + ":");
+                codigoSimpSIM.Add("LOADI 1       ; Condicao VERDADEIRA");
+                codigoSimpSIM.Add("STORE " + dest);
+
+                codigoSimpSIM.Add(labelCondFim + ":");
+            }
             else
             {
                 codigoSimpSIM.Add("; Traducao SimpSIM nao implementada: " + linhaCI);

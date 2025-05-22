@@ -1,7 +1,6 @@
 ﻿using System;
-using System.IO;
-using System.Text.RegularExpressions;
 using System.Collections.Generic;
+using System.IO;
 using System.Text;
 
 namespace Compilador.Analises
@@ -12,8 +11,11 @@ namespace Compilador.Analises
         private string[,] tbReservada;
         private readonly Automato automato;
 
-        public Analise_Lexica(FileStream arq) { this.arquivo = arq ?? throw new ArgumentNullException(nameof(arq)); this.automato = new Automato(); criarTabelaReservada(); }
-        private void criarTabelaReservada() { tbReservada = new string[,] { { "Program", "t_programa" }, { "Integer", "t_integer" }, { "Float", "t_float" }, { "Char", "t_char" }, { "String", "t_string" }, { "Boolean", "t_boolean" }, { "If", "t_if" }, { "Else", "t_else" }, { "While", "t_while" }, { "{", "t_abreBloco" }, { "}", "t_fechaBloco" }, { "(", "t_abreParen" }, { ")", "t_fechaParen" }, { "=", "t_atribuicao" }, { ",", "t_virgula" }, { ".", "t_ponto" }, { ";", "t_ponto_virgula" }, { "true", "t_bool" }, { "false", "t_bool" } }; }
+        public Analise_Lexica(FileStream arq)
+        { this.arquivo = arq ?? throw new ArgumentNullException(nameof(arq)); this.automato = new Automato(); criarTabelaReservada(); }
+
+        private void criarTabelaReservada()
+        { tbReservada = new string[,] { { "Program", "t_programa" }, { "Integer", "t_integer" }, { "Float", "t_float" }, { "Char", "t_char" }, { "String", "t_string" }, { "Boolean", "t_boolean" }, { "If", "t_if" }, { "Else", "t_else" }, { "While", "t_while" }, { "{", "t_abreBloco" }, { "}", "t_fechaBloco" }, { "(", "t_abreParen" }, { ")", "t_fechaParen" }, { "=", "t_atribuicao" }, { ",", "t_virgula" }, { ".", "t_ponto" }, { ";", "t_ponto_virgula" }, { "true", "t_bool" }, { "false", "t_bool" } }; }
 
         public List<(string TokenDescription, int LineNumber)> AnalisadorLexico()
         {
@@ -144,7 +146,6 @@ namespace Compilador.Analises
                         else { relatorio.Add(($"ERRO : String literal não fechada ou contém nova linha \"{strLexema}...", contLinha)); }
                         continue;
                     }
-
                     else
                     {
                         char charConsumido = (char)reader.Read();
@@ -196,7 +197,6 @@ namespace Compilador.Analises
                         }
                         continue;
                     }
-
                 }
             }
 
@@ -222,7 +222,6 @@ namespace Compilador.Analises
             // Se não encontrou nenhuma correspondência (ignorando case), retorna null
             return null;
         }
-
 
         private string firstID(string token)
         {

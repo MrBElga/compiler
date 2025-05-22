@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace Compilador.Analises
 {
@@ -10,15 +9,14 @@ namespace Compilador.Analises
         {
             var otimizado = new List<string>(codigoIntermediario);
 
-      
-            RemoverAtribuicoesIdentidade(otimizado); 
+            RemoverAtribuicoesIdentidade(otimizado);
             RemoverAtribuicoesInuteis(otimizado);
             PropagarConstantes(otimizado);
             CalculoConstante(otimizado);
             EliminarSubexpressoesComuns(otimizado);
             RemoverSaltosInuteis(otimizado);
             SimplificarAritmeticaTrivial(otimizado);
-            PropagarCopias(otimizado); 
+            PropagarCopias(otimizado);
             return otimizado;
         }
 
@@ -26,7 +24,7 @@ namespace Compilador.Analises
         {
             for (int i = linhas.Count - 1; i >= 0; i--)
             {
-                if (linhas[i] == null) continue; 
+                if (linhas[i] == null) continue;
                 if (linhas[i].TrimStart().StartsWith("// REMOVIDO")) continue;
 
                 var m = System.Text.RegularExpressions.Regex.Match(linhas[i], @"^\s*(\w+)\s*=\s*\1\s*;?\s*$");
@@ -36,6 +34,7 @@ namespace Compilador.Analises
                 }
             }
         }
+
         // Em OtimizadorCodigo.cs
         private static void RemoverAtribuicoesInuteis(List<string> linhas)
         {
@@ -97,7 +96,6 @@ namespace Compilador.Analises
             {
                 if (!usados.Contains(kvp.Key))
                 {
-         
                     if (kvp.Value < linhas.Count &&
                         linhas[kvp.Value] != null &&
                         !linhas[kvp.Value].TrimStart().StartsWith("// REMOVIDO"))
@@ -126,7 +124,7 @@ namespace Compilador.Analises
                 {
                     string lhs = partes[0].Trim();
                     string rhs = partes[1].Trim();
-               
+
                     rhs = rhs.TrimEnd(';');
 
                     if (decimal.TryParse(rhs, out _))
@@ -135,11 +133,11 @@ namespace Compilador.Analises
                     }
                     else
                     {
-                        string rhsVar = rhs.Trim(); 
+                        string rhsVar = rhs.Trim();
                         if (constantes.TryGetValue(rhsVar, out string val))
                         {
-                            linhas[i] = lhs + " = " + val + (linhas[i].Trim().EndsWith(";") ? ";" : ""); 
-                            constantes[lhs] = val; 
+                            linhas[i] = lhs + " = " + val + (linhas[i].Trim().EndsWith(";") ? ";" : "");
+                            constantes[lhs] = val;
                         }
                     }
                 }
@@ -163,7 +161,7 @@ namespace Compilador.Analises
                     {
                         decimal a = decimal.Parse(op1_str, System.Globalization.CultureInfo.InvariantCulture);
                         decimal b = decimal.Parse(op2_str, System.Globalization.CultureInfo.InvariantCulture);
-                        decimal resultado = 0; 
+                        decimal resultado = 0;
 
                         switch (oper)
                         {
@@ -265,6 +263,7 @@ namespace Compilador.Analises
             }
             return false;
         }
+
         private static void PropagarCopias(List<string> linhas)
         {
             bool houveMudancaGeralNaPassada;
