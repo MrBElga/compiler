@@ -11,12 +11,14 @@ namespace Compilador.Analises
         private int index;
         private List<string> codigoIntermediario;
         private int tempCount = 0;
+        private List<string> erros;
 
         public GeradorCodigoIntermediario(List<Token> tokens)
         {
             this.tokens = tokens;
             this.index = 0;
             this.codigoIntermediario = new List<string>();
+            this.erros = new List<string>();
         }
 
         public List<string> Gerar()
@@ -78,15 +80,36 @@ namespace Compilador.Analises
             Avancar(); // (
             string cond = ExpressaoRelacional();
             Avancar(); // )
+
+            string rotuloElse = NovoRotulo();
             string rotuloFimIf = NovoRotulo();
-            codigoIntermediario.Add($"ifFalse {cond} goto {rotuloFimIf}");
-            Avancar(); // {
-            while (!Match("t_fechaBloco"))
+            codigoIntermediario.Add($"ifFalse {cond} goto {rotuloElse}");
+
+            Avancar();
+            while (!Match("t_fechaBloco") && Current().Type != "EOF")
             {
                 Comando();
             }
-            Avancar(); // }
-            codigoIntermediario.Add($"{rotuloFimIf}:");
+            Avancar();
+
+            if (tokens[index].Type == "t_else")
+            {
+                codigoIntermediario.Add($"goto {rotuloFimIf}");
+                codigoIntermediario.Add($"{rotuloElse}:");
+
+                Avancar();
+                Avancar();
+                while (!Match("t_fechaBloco") && Current().Type != "EOF")
+                {
+                    Comando();
+                }
+                Avancar();
+                codigoIntermediario.Add($"{rotuloFimIf}:");
+            }
+            else
+            {
+                codigoIntermediario.Add($"{rotuloElse}:");
+            }
         }
 
         private void ComandoWhile()
@@ -157,6 +180,7 @@ namespace Compilador.Analises
             return fator1;
         }
 
+        // Em GeradorCodigoIntermediario.cs, dentro de Fator()
         private string Fator()
         {
             if (Match("t_id") || Match("t_numero_int") || Match("t_numero_real"))
@@ -165,14 +189,26 @@ namespace Compilador.Analises
                 Avancar();
                 return val;
             }
+            else if (Match("t_bool"))
+            {
+                string val = Current().Lexeme;
+                Avancar();
+
+                if (val.ToLower() == "true") return "1";
+                if (val.ToLower() == "false") return "0";
+                return val;
+            }
             else if (Match("t_abreParen"))
             {
                 Avancar();
                 string expr = Expressao();
-                Avancar(); // fecha paren
+                Avancar();
                 return expr;
             }
-            return "0";
+
+            erros.Add($"Fator inesperado: {Current().Lexeme} na linha {Current().LineNumber}"); // Corrigido para usar "erros"
+            Avancar();
+            return "ERRO_FATOR";
         }
 
         private string NovoTemp() => $"t{tempCount++}";

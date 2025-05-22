@@ -106,11 +106,8 @@ namespace Compilador.Analises
                     }
                 }
             }
-
-            // Ordena os índices em ordem decrescente para remoção segura
             indicesParaRemover.Sort((a, b) => b.CompareTo(a));
 
-            // Remove as linhas
             foreach (int indice in indicesParaRemover)
             {
                 linhas.RemoveAt(indice);
@@ -129,7 +126,7 @@ namespace Compilador.Analises
                 {
                     string lhs = partes[0].Trim();
                     string rhs = partes[1].Trim();
-                    // Remove ponto e vírgula do RHS, se houver, para TryParse e armazenamento
+               
                     rhs = rhs.TrimEnd(';');
 
                     if (decimal.TryParse(rhs, out _))
@@ -138,13 +135,11 @@ namespace Compilador.Analises
                     }
                     else
                     {
-                        // Tenta propagar se RHS é uma variável que já é constante
-                        // Também remove ponto e vírgula de 'rhs' antes de procurar em 'constantes'
-                        string rhsVar = rhs.Trim(); // rhs já foi Trim()
+                        string rhsVar = rhs.Trim(); 
                         if (constantes.TryGetValue(rhsVar, out string val))
                         {
-                            linhas[i] = lhs + " = " + val + (linhas[i].Trim().EndsWith(";") ? ";" : ""); // Mantém o ; se existia
-                            constantes[lhs] = val; // Atualiza que lhs agora também é essa constante
+                            linhas[i] = lhs + " = " + val + (linhas[i].Trim().EndsWith(";") ? ";" : ""); 
+                            constantes[lhs] = val; 
                         }
                     }
                 }
@@ -168,7 +163,7 @@ namespace Compilador.Analises
                     {
                         decimal a = decimal.Parse(op1_str, System.Globalization.CultureInfo.InvariantCulture);
                         decimal b = decimal.Parse(op2_str, System.Globalization.CultureInfo.InvariantCulture);
-                        decimal resultado = 0; // Inicialização padrão
+                        decimal resultado = 0; 
 
                         switch (oper)
                         {
@@ -177,13 +172,13 @@ namespace Compilador.Analises
                             case "*": resultado = a * b; break;
                             case "/":
                                 if (b != 0) resultado = a / b;
-                                else { /* Divisão por zero, não otimizar ou tratar como erro */ continue; }
+                                else { continue; }
                                 break;
                         }
                         linhas[i] = $"{temp} = {resultado.ToString(System.Globalization.CultureInfo.InvariantCulture)}" + (linhas[i].Trim().EndsWith(";") ? ";" : "");
                     }
-                    catch (FormatException) { /* Erro ao parsear, não otimizar */ }
-                    catch (OverflowException) { /* Resultado muito grande, não otimizar */ }
+                    catch (FormatException) { }
+                    catch (OverflowException) { }
                 }
             }
         }
@@ -194,21 +189,15 @@ namespace Compilador.Analises
             for (int i = 0; i < linhas.Count; i++)
             {
                 if (linhas[i] == null || linhas[i].TrimStart().StartsWith("// REMOVIDO")) continue;
-
-                // Regex para capturar "tX = expressao_qualquer"
-                // A expressão pode conter espaços, então (.+) é usado.
                 var m = System.Text.RegularExpressions.Regex.Match(linhas[i], @"^\s*(t\d+)\s*=\s*(.+)$");
                 if (m.Success)
                 {
                     string tempDefinido = m.Groups[1].Value;
                     string expressao = m.Groups[2].Value.Trim();
-                    // Remove ponto e vírgula do final da expressão, se houver
                     expressao = expressao.TrimEnd(';');
 
                     if (exprMap.TryGetValue(expressao, out string tempExistente))
                     {
-                        // Se a expressão já foi calculada e armazenada em tempExistente,
-                        // e tempExistente não é o mesmo que tempDefinido (evitar t1 = t1)
                         if (tempDefinido != tempExistente)
                         {
                             linhas[i] = tempDefinido + " = " + tempExistente + (linhas[i].Trim().EndsWith(";") ? ";" : "");
@@ -227,7 +216,7 @@ namespace Compilador.Analises
             for (int i = 0; i < linhas.Count - 1; i++)
             {
                 if (linhas[i] == null || linhas[i].TrimStart().StartsWith("// REMOVIDO")) continue;
-                if (linhas[i + 1] == null) continue; // Linha seguinte pode ter sido removida
+                if (linhas[i + 1] == null) continue;
 
                 string linhaAtual = linhas[i].Trim();
                 if (linhaAtual.StartsWith("goto "))
@@ -236,7 +225,6 @@ namespace Compilador.Analises
                     destinoSalto = destinoSalto.TrimEnd(';');
 
                     string proximaLinhaLabel = linhas[i + 1].Trim();
-                    // Verifica se a proximaLinhaLabel é exatamente "destinoSalto:"
                     if (proximaLinhaLabel == destinoSalto + ":")
                     {
                         linhas[i] = "// REMOVIDO (SALTO INUTIL): " + linhas[i];
@@ -251,7 +239,6 @@ namespace Compilador.Analises
             {
                 if (linhas[i] == null || linhas[i].TrimStart().StartsWith("// REMOVIDO")) continue;
 
-                // Usar Regex para substituições mais seguras e precisas
                 // x = y * 1  -> x = y
                 linhas[i] = System.Text.RegularExpressions.Regex.Replace(linhas[i], @"\s*\*\s*1\b", "");
                 // x = y + 0  -> x = y
@@ -263,7 +250,6 @@ namespace Compilador.Analises
             }
         }
 
-        // Função auxiliar para PropagarCopias (deve estar na classe)
         private static bool VariavelRedefinidaEntre(string varNome, int linhaDaCopiaOriginal, int linhaDeUsoAtual, List<string> codigo)
         {
             for (int k = linhaDaCopiaOriginal + 1; k < linhaDeUsoAtual; k++)
@@ -279,8 +265,6 @@ namespace Compilador.Analises
             }
             return false;
         }
-
-        // Versão mais recente e corrigida de PropagarCopias
         private static void PropagarCopias(List<string> linhas)
         {
             bool houveMudancaGeralNaPassada;
@@ -321,7 +305,6 @@ namespace Compilador.Analises
 
                             if (!lhsCopiaEhDefinidoNestaLinha && System.Text.RegularExpressions.Regex.IsMatch(linhaDeUsoAtual, pattern))
                             {
-                                // Preserva o ponto e vírgula se a linha original o possuía
                                 bool endsWithSemicolon = linhaDeUsoAtual.Trim().EndsWith(";");
                                 string linhaModificadaSemSemicolon = System.Text.RegularExpressions.Regex.Replace(linhaDeUsoAtual.TrimEnd(';'), pattern, rhsCopia);
                                 string linhaModificada = linhaModificadaSemSemicolon + (endsWithSemicolon ? ";" : "");

@@ -174,11 +174,13 @@ namespace Compilador.Analises
             {
                 string varCondicional = partes[1];
                 string labelDestino = partes[3];
+
                 string definicaoDeVarCondicional = "";
-                foreach (string linhaAnterior in codigoIntermediarioOtimizado)
+                foreach (string linhaAnteriorCI in codigoIntermediarioOtimizado)
                 {
-                    string linhaTrimmed = linhaAnterior.Trim();
+                    string linhaTrimmed = linhaAnteriorCI.Trim();
                     if (linhaTrimmed.StartsWith("// REMOVIDO")) continue;
+
                     if (linhaTrimmed.StartsWith(varCondicional + " ="))
                     {
                         definicaoDeVarCondicional = linhaTrimmed;
@@ -188,61 +190,76 @@ namespace Compilador.Analises
 
                 if (!string.IsNullOrEmpty(definicaoDeVarCondicional))
                 {
-                    var matchDef = Regex.Match(definicaoDeVarCondicional,
-                                     @"^\s*\w+\s*=\s*([a-zA-Z_0-9][a-zA-Z_0-9.]*)\s*([<>=!]+)\s*([a-zA-Z_0-9][a-zA-Z_0-9.]*)\s*$");
-                    if (matchDef.Success)
+                    var matchDefRelacional = Regex.Match(definicaoDeVarCondicional,
+                        @"^\s*\w+\s*=\s*([a-zA-Z_0-9][a-zA-Z_0-9.-]*)\s*([<>=!]+)\s*([a-zA-Z_0-9][a-zA-Z_0-9.-]*)\s*;?\s*$");
+
+                    var matchDefBooleanaSimples = Regex.Match(definicaoDeVarCondicional,
+                        @"^\s*\w+\s*=\s*(0|1|true|false)\s*;?\s*$", RegexOptions.IgnoreCase);
+
+                    if (matchDefRelacional.Success)
                     {
-                        string opA_str = matchDef.Groups[1].Value;
-                        string relOp = matchDef.Groups[2].Value;
-                        string opB_str = matchDef.Groups[3].Value;
-                        if (decimal.TryParse(opA_str, out _)) codigoSimpSIM.Add("LOADI " + opA_str);
-                        else codigoSimpSIM.Add("LOAD " + opA_str);
-                        if (decimal.TryParse(opB_str, out _)) codigoSimpSIM.Add("SUBI " + opB_str);
-                        else codigoSimpSIM.Add("SUB " + opB_str);
+                        string opA_str = matchDefRelacional.Groups[1].Value;
+                        string relOp = matchDefRelacional.Groups[2].Value;
+                        string opB_str = matchDefRelacional.Groups[3].Value;
+
+                        if (decimal.TryParse(opA_str, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out _))
+                            codigoSimpSIM.Add("LOADI " + opA_str);
+                        else
+                            codigoSimpSIM.Add("LOAD " + RegistrarVariavel(opA_str));
+
+                        if (decimal.TryParse(opB_str, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out _))
+                            codigoSimpSIM.Add("SUBI " + opB_str);
+                        else
+                            codigoSimpSIM.Add("SUB " + RegistrarVariavel(opB_str));
+
                         switch (relOp)
                         {
-                            case "<": 
-                                codigoSimpSIM.Add("JPOS " + labelDestino + "  ; Salta se A > B (A-B > 0)");
-                                codigoSimpSIM.Add("JZERO " + labelDestino + " ; Salta se A = B (A-B = 0)");
+                            case "<":
+                                codigoSimpSIM.Add("JPOS " + labelDestino);
+                                codigoSimpSIM.Add("JZERO " + labelDestino);
                                 break;
-                            case "<=": 
-                                codigoSimpSIM.Add("JPOS " + labelDestino + "  ; Salta se A > B (A-B > 0)");
+                            case "<=":
+                                codigoSimpSIM.Add("JPOS " + labelDestino);
                                 break;
-                            case ">": 
-                                codigoSimpSIM.Add("JNEG " + labelDestino + "  ; Salta se A < B (A-B < 0)");
-                                codigoSimpSIM.Add("JZERO " + labelDestino + " ; Salta se A = B (A-B = 0)");
+                            case ">":
+                                codigoSimpSIM.Add("JNEG " + labelDestino);
+                                codigoSimpSIM.Add("JZERO " + labelDestino);
                                 break;
                             case ">=":
-                                codigoSimpSIM.Add("JNEG " + labelDestino + "  ; Salta se A < B (A-B < 0)");
+                                codigoSimpSIM.Add("JNEG " + labelDestino);
                                 break;
                             case "==":
-                                string skipLabelTrue = NovoRotuloSimpSIM();
-                                codigoSimpSIM.Add("JZERO " + skipLabelTrue + " ; Se A == B, não salta para destino, pula o JUMP");
-                                codigoSimpSIM.Add("JUMP " + labelDestino + "   ; A != B, então salta");
-                                codigoSimpSIM.Add(skipLabelTrue + ":");
+                                string skipLabelTrueEq = NovoRotuloSimpSIM();
+                                codigoSimpSIM.Add("JZERO " + skipLabelTrueEq);
+                                codigoSimpSIM.Add("JUMP " + labelDestino);
+                                codigoSimpSIM.Add(skipLabelTrueEq + ":");
                                 break;
                             case "!=":
-                                codigoSimpSIM.Add("JZERO " + labelDestino + " ; Salta se A == B (A-B = 0)");
+                                codigoSimpSIM.Add("JZERO " + labelDestino);
                                 break;
                             default:
-                                codigoSimpSIM.Add("; ERRO SimpSIM: Operador relacional desconhecido em ifFalse: " + relOp);
+                                codigoSimpSIM.Add("; ERRO SimpSIM: Operador relacional desconhecido '" + relOp + "' na definicao de " + varCondicional);
                                 break;
                         }
                     }
+                    else if (matchDefBooleanaSimples.Success)
+                    {
+                        codigoSimpSIM.Add("LOAD " + RegistrarVariavel(varCondicional));
+                        codigoSimpSIM.Add("JZERO " + labelDestino);
+                    }
                     else
                     {
-                        codigoSimpSIM.Add("; ERRO SimpSIM: Nao foi possivel parsear a definicao da condicao: " + definicaoDeVarCondicional);
-                        codigoSimpSIM.Add("LOAD " + varCondicional + " ; Fallback condicional");
-                        codigoSimpSIM.Add("JZERO " + labelDestino + " ; Salta se " + varCondicional + " (condicao) for 0 (false)");
+                        codigoSimpSIM.Add("LOAD " + RegistrarVariavel(varCondicional));
+                        codigoSimpSIM.Add("JZERO " + labelDestino);
                     }
                 }
                 else
                 {
-                    codigoSimpSIM.Add("; ERRO SimpSIM: Definicao da variavel condicional " + varCondicional + " nao encontrada.");
-                    codigoSimpSIM.Add("LOAD " + varCondicional + " ; Fallback condicional");
-                    codigoSimpSIM.Add("JZERO " + labelDestino + " ; Salta se " + varCondicional + " (condicao) for 0 (false)");
+                    codigoSimpSIM.Add("LOAD " + RegistrarVariavel(varCondicional));
+                    codigoSimpSIM.Add("JZERO " + labelDestino);
                 }
             }
+
             else
             {
                 codigoSimpSIM.Add("; Traducao SimpSIM nao implementada: " + linhaCI);
