@@ -55,6 +55,7 @@
     <Compile Include="Analises\Analise_Sintatica.cs" />
     <Compile Include="Analises\Automato.cs" />
     <Compile Include="Analises\GeradorCodigoIntermediario.cs" />
+    <Compile Include="Analises\GeradorCodigoSimpSIM.cs" />
     <Compile Include="Analises\OtimizadorCodigo.cs" />
     <Compile Include="Analises\RelatorioCodigoIntermediario.cs" />
     <Compile Include="Analises\RelatorioCodigoOtimizado.cs" />

@@ -276,7 +276,21 @@ namespace Compilador
                     richTextBoxErro.AppendText("✓ Código Otimizado gerado com sucesso!\n");
                     richTextBoxErro.AppendText("------------------------------------------------------\n");
 
+                    var geradorSimpSIM = new GeradorCodigoSimpSIM(codigoOtimizado); // 'codigoOtimizado' é a List<string> da otimização
+                    List<string> codigoFinalSimpSIM = geradorSimpSIM.Gerar();
 
+                    // Salvar ou exibir o código SimpSIM
+                    string caminhoArquivoSimpSIM = Path.Combine(
+                        Path.GetDirectoryName(currentFilePath),
+                        Path.GetFileNameWithoutExtension(currentFilePath) + "_codigoSimpSIM.txt" // ou .txt
+                    );
+                    File.WriteAllLines(caminhoArquivoSimpSIM, codigoFinalSimpSIM);
+
+                    richTextBoxErro.SelectionColor = Color.DarkGreen; // Uma nova cor para o sucesso da geração final
+                    richTextBoxErro.SelectionFont = new Font(richTextBoxErro.Font, FontStyle.Bold);
+                    richTextBoxErro.AppendText("✓ Código de Máquina SimpSIM gerado com sucesso!\n");
+                    richTextBoxErro.AppendText($"* Salvo em: {caminhoArquivoSimpSIM}\n");
+                    richTextBoxErro.AppendText("------------------------------------------------------\n");
                 }
                 else
                 {

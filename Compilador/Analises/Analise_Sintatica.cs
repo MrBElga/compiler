@@ -8,7 +8,6 @@ namespace Compilador.Analises
     {
         private readonly List<Token> tokens;
         private int currentTokenIndex;
-        private bool comandoEncontrado = false;
 
         public List<string> Erros { get; }
 
