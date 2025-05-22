@@ -8,17 +8,18 @@ namespace Compilador.Analises
     {
         private readonly List<Token> tokens;
         private int currentTokenIndex;
-        private bool comandoEncontrado = false;
 
         public List<string> Erros { get; }
 
         private readonly HashSet<string> syncTokensPrograma = new HashSet<string> { "EOF" };
+
         private readonly HashSet<string> syncTokensBloco = new HashSet<string> {
              "t_integer", "t_float", "t_char", "t_string", "t_boolean",
              "t_id", "t_if", "t_while", "t_abreBloco",
              "t_ponto_virgula",
              "t_fechaBloco", "EOF"
          };
+
         private readonly HashSet<string> syncTokensComando = new HashSet<string> { "t_id", "t_if", "t_else", "t_while", "t_abreBloco", "t_fechaBloco", "t_ponto_virgula", "EOF" };
         private readonly HashSet<string> syncTokensExpr = new HashSet<string> { "t_fechaParen", "t_virgula", "t_ponto_virgula", "t_fechaBloco", "EOF" };
 
@@ -41,8 +42,12 @@ namespace Compilador.Analises
 
         private Token CurrentToken => tokens[currentTokenIndex];
         private Token LookaheadToken => (currentTokenIndex + 1 < tokens.Count) ? tokens[currentTokenIndex + 1] : CurrentToken;
-        private void Advance() { if (currentTokenIndex < tokens.Count - 1) currentTokenIndex++; }
-        private bool Match(string expectedType) { if (CurrentToken.Type == expectedType) { Advance(); return true; } return false; }
+
+        private void Advance()
+        { if (currentTokenIndex < tokens.Count - 1) currentTokenIndex++; }
+
+        private bool Match(string expectedType)
+        { if (CurrentToken.Type == expectedType) { Advance(); return true; } return false; }
 
         private void ReportError(string message, int lineNumber)
         {
@@ -142,7 +147,6 @@ namespace Compilador.Analises
 
         private void ParseBloco(Boolean comandoEncontrado)
         {
-
             Consume("t_abreBloco");
             while (CurrentToken.Type != "t_fechaBloco" && CurrentToken.Type != "EOF")
             {
@@ -159,9 +163,8 @@ namespace Compilador.Analises
                     }
                     else if (IsComandoStartToken(CurrentToken.Type))
                     {
-                        comandoEncontrado = true;  
+                        comandoEncontrado = true;
                         ParseComando();
-             
                     }
                     else
                     {
@@ -173,9 +176,11 @@ namespace Compilador.Analises
             Consume("t_fechaBloco");
         }
 
+        private bool IsComandoStartToken(string type)
+        { return type == "t_if" || type == "t_while" || type == "t_id" || type == "t_abreBloco"; }
 
-        private bool IsComandoStartToken(string type) { return type == "t_if" || type == "t_while" || type == "t_id" || type == "t_abreBloco"; }
-        private bool IsTypeToken(string type) { return type == "t_integer" || type == "t_float" || type == "t_char" || type == "t_string" || type == "t_boolean"; }
+        private bool IsTypeToken(string type)
+        { return type == "t_integer" || type == "t_float" || type == "t_char" || type == "t_string" || type == "t_boolean"; }
 
         private void ParseDeclaracaoVariavel()
         {
@@ -272,17 +277,27 @@ namespace Compilador.Analises
                 ParseExpr();
             }
         }
-        private bool IsOpRel(string type) { return type == "t_igualdade" || type == "t_diferenca" || type == "t_menor" || type == "t_maior" || type == "t_menor_igual" || type == "t_maior_igual"; }
 
-        private void ParseExpr() { ParseTermo(); ParseExprPrime(); }
+        private bool IsOpRel(string type)
+        { return type == "t_igualdade" || type == "t_diferenca" || type == "t_menor" || type == "t_maior" || type == "t_menor_igual" || type == "t_maior_igual"; }
 
-        private void ParseExprPrime() { if (IsOpAddSub(CurrentToken.Type)) { Advance(); ParseTermo(); ParseExprPrime(); } }
-        private bool IsOpAddSub(string type) { return type == "t_soma" || type == "t_subtracao"; }
+        private void ParseExpr()
+        { ParseTermo(); ParseExprPrime(); }
 
-        private void ParseTermo() { ParseFator(); ParseTermoPrime(); }
+        private void ParseExprPrime()
+        { if (IsOpAddSub(CurrentToken.Type)) { Advance(); ParseTermo(); ParseExprPrime(); } }
 
-        private void ParseTermoPrime() { if (IsOpMulDiv(CurrentToken.Type)) { Advance(); ParseFator(); ParseTermoPrime(); } }
-        private bool IsOpMulDiv(string type) { return type == "t_multiplicacao" || type == "t_divisao"; }
+        private bool IsOpAddSub(string type)
+        { return type == "t_soma" || type == "t_subtracao"; }
+
+        private void ParseTermo()
+        { ParseFator(); ParseTermoPrime(); }
+
+        private void ParseTermoPrime()
+        { if (IsOpMulDiv(CurrentToken.Type)) { Advance(); ParseFator(); ParseTermoPrime(); } }
+
+        private bool IsOpMulDiv(string type)
+        { return type == "t_multiplicacao" || type == "t_divisao"; }
 
         private void ParseFator()
         {

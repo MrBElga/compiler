@@ -1,12 +1,11 @@
-﻿using System;
-using System.IO;
-using System.Text.RegularExpressions;
+﻿using System.Text.RegularExpressions;
 
 namespace Compilador.Analises
 {
     internal class Automato
     {
-        public Automato() { }
+        public Automato()
+        { }
 
         public string AutomatoID(string palavra)
         {
